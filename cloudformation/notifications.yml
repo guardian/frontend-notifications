@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Frontend Notifications Infrastructure'
 
 Parameters:
-  GCMSubscriptionsTable:
+  GCMSubscriptionsTableName:
     Description: The table name of the GCM Subscriptions Table
     Type: String
   GCMWorkerQueueName:
@@ -13,7 +13,7 @@ Resources:
   GCMWorkerQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: {Ref:GCMWorkerQueueName}
+      QueueName: {Ref: GCMWorkerQueueName}
 
   GCMSubscriptionsTable:
     Type: AWS::DynamoDB::Table
