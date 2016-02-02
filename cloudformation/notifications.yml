@@ -15,16 +15,17 @@ Resources:
     Properties:
       QueueName: {Ref:GCMWorkerQueueName}
 
-   GCMSubscriptionsTable:
-     Type: AWS::DynamoDB::Table
-     Properties:
-       TableName: {Ref: GCMSubscriptionsTableName}
-       KeySchema:
-         - {AttributeName: notificationTopicId, KeyType: HASH}
-         - {AttributeName: gcmBrowserId, KeyType: RANGE}
-       AttributeDefinitions:
-         - {AttributeName: notificationTopicId, AttributeType: S}
-         - {AttributeName: gcmBrowserId, AttributeType: S}
-       ProvisionedThroughput:
-         ReadCapacityUnits: 10
-         WriteCapacityUnits: 10
+  GCMSubscriptionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: {Ref: GCMSubscriptionsTableName}
+      KeySchema:
+        - {AttributeName: notificationTopicId, KeyType: HASH}
+        - {AttributeName: gcmBrowserId, KeyType: RANGE}
+      AttributeDefinitions:
+        - {AttributeName: notificationTopicId, AttributeType: S}
+        - {AttributeName: gcmBrowserId, AttributeType: S}
+      ProvisionedThroughput:
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
+
