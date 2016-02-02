@@ -1,0 +1,13 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'Frontend Notifications Infrastructure'
+
+Parameters:
+  GCMWorkerQueueName:
+    Description: The name of the GCM work queue
+    Type: String
+
+Resources:
+  GCMWorkerQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: {Ref:GCMWorkerQueueName}
