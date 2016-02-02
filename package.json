@@ -1,0 +1,15 @@
+{
+  "name": "frontend-notifications",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "gulp-yaml": "^1.0.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Francis Carr",
+  "license": "ISC"
+}
