@@ -2,6 +2,15 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Frontend Notifications Infrastructure'
 
 Parameters:
+#  ArtifactBucket:
+#    Description: Bucket where lambda artifacts are stored
+#    Type: String
+#  LambdaRole:
+#    Description: Role ARN lambda functions will run with
+#    Type: String
+#  CapiKinesisStream:
+#    Description: The capi updates stream ARN
+#    Type: String
   GCMSubscriptionsTableName:
     Description: The table name of the GCM Subscriptions Table
     Type: String
@@ -29,3 +38,16 @@ Resources:
         ReadCapacityUnits: 10
         WriteCapacityUnits: 10
 
+#   ContentUpdateHandler:
+#     Type: AWS::Lambda::Function
+#     Properties:
+#       Description: >
+#         Initial handler of incoming emails; this just puts onto a Kinesis stream
+#       Handler: emailingest.handler
+#       Runtime: nodejs
+#       Role:
+#         Ref: LambdaRole
+#       Code:
+#         S3Bucket:
+#           Ref: ArtifactBucket
+#         S3Key: lambda/email-ingest-handler.zip

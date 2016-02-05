@@ -1,0 +1,8 @@
+GET / controllers.Application.index()
+
+POST /sendto/*browserId controllers.Application.sendTo(browserId)
+
+GET /_healthcheck controllers.Healthcheck.healthcheck()
+
+GET  /send controllers.Application.send()
+POST /send controllers.Application.sendToOne()
