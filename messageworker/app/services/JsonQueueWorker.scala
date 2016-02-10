@@ -125,7 +125,6 @@ abstract class JsonQueueWorker[A: Reads] extends Logging {
 
   final def start() {
     log.info("Starting worker via start")
-    println("Starting worker via start")
     synchronized {
       if (started) {
         log.warn("Attempted to start queue worker but queue worker is already started")

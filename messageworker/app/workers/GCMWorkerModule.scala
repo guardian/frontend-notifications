@@ -11,7 +11,6 @@ import scala.concurrent.Future
 class GCMWorkerModule @Inject() (applicationLifecycle: ApplicationLifecycle) extends Logging {
 
   log.info("Running application lifecycle constructor")
-  println("Running application lifecycle constructor")
   GCMWorker.start()
 
   applicationLifecycle.addStopHook { () =>
