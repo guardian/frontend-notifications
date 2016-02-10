@@ -23,7 +23,7 @@ object GCMWorker extends JsonQueueWorker[GCMMessage] with Logging {
     val credentials: AWSCredentialsProvider = new DefaultAWSCredentialsProviderChain()
     JsonMessageQueue[GCMMessage](new AmazonSQSAsyncClient(credentials).withRegion(Region.getRegion(Regions.EU_WEST_1)), queueUrl)
   } getOrElse {
-    throw new RuntimeException("Required property 'frontpress.sqs.tool_queue_url' not set")}
+    throw new RuntimeException("Required property 'gcmSendQueueUrl' not set")}
 
   override def process(message: SQSMessage[GCMMessage]): Future[Unit] = {
     val GCMMessage(topic: String, clientId: String) = message.get
@@ -33,7 +33,7 @@ object GCMWorker extends JsonQueueWorker[GCMMessage] with Logging {
     val futureResult = GCM.sendGcmNotification(GCMNotification("title", "body"), clientId)
 
     futureResult.onComplete {
-      case Success(result) => log.info(s"Successfull sent notification to $clientId: ${message.handle.get}")
+      case Success(result) => log.info(s"Successfully sent notification to $clientId: ${message.handle.get}")
       case Failure(t) => log.error(s"Error sending notification to $clientId: $t")
     }
 
