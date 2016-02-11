@@ -2,6 +2,7 @@ resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/"
 
 lazy val messageWorker = (project in file("./messageworker"))
   .settings(
+    scalaVersion := "2.11.7",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
       "com.google.gcm" % "gcm-server" % "1.0.0",
