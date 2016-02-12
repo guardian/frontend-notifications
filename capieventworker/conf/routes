@@ -1,0 +1,3 @@
+GET / controllers.Application.index()
+
+GET /_healthcheck controllers.Healthcheck.healthcheck()
