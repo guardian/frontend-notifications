@@ -22,6 +22,7 @@ class Config @Inject()(config: play.Configuration) {
     Option(config.getString("firehoseStreamName"))
       .getOrElse(throw new RuntimeException("Property not set 'firehoseStreamName'"))
 
-  val messageWorkerQueue: Option[String] =
+  val messageWorkerQueue: String =
     Option(config.getString("messageWorkerQueue"))
+      .getOrElse("Required property 'messageWorkerQueue' not set")
 }
