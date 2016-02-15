@@ -36,7 +36,7 @@ class GCMWorker @Inject()(
 
     log.info(s"Processing job for topic $topic to $clientId")
 
-    val futureResult: Future[Result] = gcm.sendGcmNotification(GCMNotification(title, body), clientId)
+    val futureResult: Future[Result] = gcm.sendSingle(GCMNotification(title, body), clientId)
 
     futureResult.onComplete {
       case Success(result) => log.info(s"Successfully sent notification to $clientId: ${message.handle.get}")

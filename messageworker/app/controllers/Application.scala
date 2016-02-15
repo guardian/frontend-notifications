@@ -23,7 +23,7 @@ class Application @Inject() (
   }
 
   def sendTo(browserId: String) = Action.async {
-    gcm.sendGcmNotification(GCMNotification("Test title", "message"), browserId)
+    gcm.sendSingle(GCMNotification("Test title", "message"), browserId)
       .map{ result =>
         Ok("Sent")}
       .recover{case t => InternalServerError(s"Error: $t") }

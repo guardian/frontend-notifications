@@ -5,6 +5,8 @@ import javax.inject.Inject
 case class GCMCredentials(apiKey: String)
 
 class Config @Inject()(config: play.Configuration) {
+  val gcmSendRetries: Int = 2
+
   private val gcmKey: String =
     Option(config.getString("gcmKey"))
         .getOrElse(throw new RuntimeException("No gcmKey set"))
