@@ -37,10 +37,10 @@ class Application @Inject() (
     val requestMap: Map[String, Seq[String]] = request.body.asFormUrlEncoded.getOrElse(Map.empty)
 
     val maybeGCMMessage: Option[GCMMessage] = for {
-      topic <- requestMap.get("topic").map(_.mkString)
       browserId <- requestMap.get("browserId").map(_.mkString)
+      title <- requestMap.get("topic").map(_.mkString)
       body <- requestMap.get("body").map(_.mkString)
-    } yield GCMMessage(topic, browserId, body)
+    } yield GCMMessage(browserId, "notopic", title, body)
 
     maybeGCMMessage match {
       case None => Future.successful(InternalServerError(s"Invalid parameters for $requestMap"))

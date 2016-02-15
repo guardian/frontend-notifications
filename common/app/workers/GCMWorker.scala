@@ -5,6 +5,7 @@ import javax.inject.{Inject, Singleton}
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.{Region, Regions}
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
+import com.google.android.gcm.server.Result
 import config.Config
 import play.api.libs.json.Json
 import services._
@@ -16,7 +17,7 @@ object GCMMessage {
   implicit val implicitFormat = Json.format[GCMMessage]
 }
 
-case class GCMMessage(topic: String, clientId: String, body: String)
+case class GCMMessage(clientId: String, topic: String, title: String, body: String)
 
 @Singleton
 class GCMWorker @Inject()(
@@ -31,11 +32,11 @@ class GCMWorker @Inject()(
       config.gcmSendQueueUrl)
 
   override def process(message: SQSMessage[GCMMessage]): Future[Unit] = {
-    val GCMMessage(topic: String, clientId: String, body: String) = message.get
+    val GCMMessage(clientId: String, topic: String, title: String, body: String) = message.get
 
     log.info(s"Processing job for topic $topic to $clientId")
 
-    val futureResult = gcm.sendGcmNotification(GCMNotification("title", "body"), clientId)
+    val futureResult: Future[Result] = gcm.sendGcmNotification(GCMNotification(title, body), clientId)
 
     futureResult.onComplete {
       case Success(result) => log.info(s"Successfully sent notification to $clientId: ${message.handle.get}")

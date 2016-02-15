@@ -8,7 +8,7 @@ import config.Config
 
 import scala.concurrent.Future
 
-case class GCMNotification(title: String, message: String)
+case class GCMNotification(title: String, body: String)
 
 object GCMNotification {
 
