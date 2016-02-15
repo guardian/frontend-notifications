@@ -2,7 +2,7 @@ package services
 
 import java.net.InetAddress
 import java.util.UUID
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 
 import com.amazonaws.auth.{AWSCredentialsProvider, DefaultAWSCredentialsProviderChain, STSAssumeRoleSessionCredentialsProvider}
 import com.amazonaws.services.kinesis.clientlibrary.interfaces.{IRecordProcessor, IRecordProcessorCheckpointer, IRecordProcessorFactory}
@@ -14,14 +14,15 @@ import com.gu.contentapi.client.model.v1.Content
 import config.Config
 import org.apache.thrift.TDeserializer
 import org.joda.time.DateTime
+import workers.{MessageWorker, PublishedMessage}
 
 import scala.util.{Failure, Success}
 
 @Singleton
-class Firehose {
+class Firehose @Inject() (config: Config, messageWorker: MessageWorker) {
 
-  val firehoseRole: String = Config.firehoseRole
-  val firehoseStreamName: String = Config.firehoseStreamName
+  val firehoseRole: String = config.firehoseRole
+  val firehoseStreamName: String = config.firehoseStreamName
   val region: String = "eu-west-1"
 
   val localCredentials: AWSCredentialsProvider = new DefaultAWSCredentialsProviderChain()
@@ -44,17 +45,17 @@ class Firehose {
     .withInitialPositionInStream(InitialPositionInStream.LATEST)
 
   val worker = new Worker(
-    RecordProcessorFactory,
+    new RecordProcessorFactory(messageWorker),
     kinesisClientLibConfiguration,
     new NullMetricsFactory()
   )
 }
 
-object RecordProcessorFactory extends IRecordProcessorFactory {
-  override def createProcessor: IRecordProcessor = new RecordProcessor
+class RecordProcessorFactory(messageWorker: MessageWorker) extends IRecordProcessorFactory {
+  override def createProcessor: IRecordProcessor = new RecordProcessor(messageWorker)
 }
 
-class RecordProcessor extends IRecordProcessor with Logging {
+class RecordProcessor(messageWorker: MessageWorker) extends IRecordProcessor with Logging {
 
   private var kinesisShardId: String = _
   private var nextCheckpointTimeInMillis: Long = _
@@ -77,8 +78,10 @@ class RecordProcessor extends IRecordProcessor with Logging {
       ThriftDeserializer.deserializeEvent(message.getData) match {
         case Success(content) =>
           println(content._4.id)
-          println(new DateTime(content.dateTime).toString)
-          println(content._4.tags.map(_.id).mkString(","))
+          val tags = content._4.tags.map(_.id)
+          if (tags.exists(_ == "tone/minutebyminute")) {
+            println(s"Putting ${content._4.id} onto queue!")
+            messageWorker.queue.send(PublishedMessage(content._4.id))}
         case Failure(t) =>
           log.error(s"Could not deserialize message: $t")
           println(s"Could not deserialize message: $t")
