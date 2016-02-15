@@ -36,7 +36,8 @@ class Application @Inject() (gcmWorker: GCMWorkerModule) extends Controller {
     val maybeGCMMessage: Option[GCMMessage] = for {
       topic <- requestMap.get("topic").map(_.mkString)
       browserId <- requestMap.get("browserId").map(_.mkString)
-    } yield GCMMessage(topic, browserId)
+      body <- requestMap.get("body").map(_.mkString)
+    } yield GCMMessage(topic, browserId, body)
 
     maybeGCMMessage match {
       case None => Future.successful(InternalServerError(s"Invalid parameters for $requestMap"))
