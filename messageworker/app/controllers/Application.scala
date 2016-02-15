@@ -3,14 +3,18 @@ package controllers
 import javax.inject.{Inject, Singleton}
 
 import play.api.mvc.{Action, Controller}
-import services.{GCMNotification, GCM}
-import workers.{GCMMessage, GCMWorker, GCMWorkerModule}
+import services.{GCM, GCMNotification, MessageDatabase}
+import workers._
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 @Singleton
-class Application @Inject() (gcmWorker: GCMWorkerModule) extends Controller {
+class Application @Inject() (
+  gcmWorkerModule: GCMWorkerModule,
+  gcm: GCM,
+  gCMWorker: GCMWorker,
+  messageWorker: MessageWorkerModule,
+  messageDatabase: MessageDatabase) extends Controller {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -19,9 +23,8 @@ class Application @Inject() (gcmWorker: GCMWorkerModule) extends Controller {
   }
 
   def sendTo(browserId: String) = Action.async {
-    GCM.sendGcmNotification(GCMNotification("Test title", "message"), browserId)
+    gcm.sendGcmNotification(GCMNotification("Test title", "message"), browserId)
       .map{ result =>
-        result.getErrorCodeName
         Ok("Sent")}
       .recover{case t => InternalServerError(s"Error: $t") }
   }
@@ -42,7 +45,8 @@ class Application @Inject() (gcmWorker: GCMWorkerModule) extends Controller {
     maybeGCMMessage match {
       case None => Future.successful(InternalServerError(s"Invalid parameters for $requestMap"))
       case Some(gcmMessage) =>
-        GCMWorker.queue.send(gcmMessage).map { result =>
+        messageDatabase.leaveMessage(gcmMessage)
+        gCMWorker.queue.send(gcmMessage).map { result =>
           Ok(s"Message sent: ${result.getMessageId}")}
         .recover { case t => InternalServerError(t.toString)}}
   }
