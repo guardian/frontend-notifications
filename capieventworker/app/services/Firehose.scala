@@ -10,9 +10,7 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{InitialPositionI
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason
 import com.amazonaws.services.kinesis.metrics.impl.NullMetricsFactory
 import com.amazonaws.services.kinesis.model.Record
-import com.gu.contentapi.client.model.v1.Content
 import config.Config
-import org.apache.thrift.TDeserializer
 import org.joda.time.DateTime
 import workers.{MessageWorker, PublishedMessage}
 
@@ -21,27 +19,24 @@ import scala.util.{Failure, Success}
 @Singleton
 class Firehose @Inject() (config: Config, messageWorker: MessageWorker) {
 
-  val firehoseRole: String = config.firehoseRole
-  val firehoseStreamName: String = config.firehoseStreamName
-  val region: String = "eu-west-1"
-
   val localCredentials: AWSCredentialsProvider = new DefaultAWSCredentialsProviderChain()
 
+  val stsRoleSessionName: String = "firehose"
   val firehoseCredentials: AWSCredentialsProvider =
     new STSAssumeRoleSessionCredentialsProvider(
-    firehoseRole,
-    "firehose")
+      config.firehoseRole,
+      stsRoleSessionName)
 
   val frontendNotifications: String = "capi-firehose-notifications"
 
   val kinesisClientLibConfiguration = new KinesisClientLibConfiguration(
     frontendNotifications,
-    firehoseStreamName,
+    config.firehoseStreamName,
     firehoseCredentials,
     localCredentials,
     localCredentials,
     InetAddress.getLocalHost.getCanonicalHostName + ":" + UUID.randomUUID())
-    .withRegionName(region)
+    .withRegionName(config.firehoseRegionName)
     .withInitialPositionInStream(InitialPositionInStream.LATEST)
 
   val worker = new Worker(

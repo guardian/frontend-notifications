@@ -23,7 +23,7 @@ object GCMNotification {
 class GCM @Inject()(config: Config) {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val gcmClient: Sender = new Sender(config.gcm.apiKey)
+  val gcmClient: Sender = new Sender(config.gcmKey)
 
   def sendSingle(gcmNotification: GCMNotification, browserId: String): Future[Result] =
     Future.apply(gcmClient.send(GCMNotification.toMessage(gcmNotification), browserId, config.gcmSendRetries))
