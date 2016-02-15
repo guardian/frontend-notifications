@@ -34,14 +34,11 @@ class MessageWorker @Inject() (
     val PublishedMessage(topic: String) = message.get
 
     log.info(s"Processing job for topic $topic")
-    println(s"Processing job for topic $topic")
 
     clientDatabase.getIdsByTopic(topic).foreach{ browserId =>
       val gcmMessage: GCMMessage = GCMMessage(browserId.get, topic, s"Message for $topic", s"You got a new notification for $topic")
       messageDatabase.leaveMessage(gcmMessage)
       gcmWorker.queue.send(gcmMessage)
-      //println(s"Notified $browserId about $topic")
-      println(s"Got $browserId for $topic")
     }
 
     Future.successful(())
