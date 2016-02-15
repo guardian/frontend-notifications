@@ -2,7 +2,7 @@ package workers
 
 import javax.inject.{Inject, Singleton}
 
-import com.amazonaws.auth.{AWSCredentialsProvider, DefaultAWSCredentialsProviderChain}
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.regions.{Region, Regions}
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import config.Config
