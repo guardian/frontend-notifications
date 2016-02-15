@@ -16,6 +16,7 @@ import org.joda.time.DateTime
 import workers.{MessageWorker, PublishedMessage}
 
 import scala.util.{Failure, Success}
+import scala.collection.JavaConverters._
 
 @Singleton
 class Firehose @Inject() (config: Config, messageWorker: MessageWorker) {
@@ -58,30 +59,25 @@ class RecordProcessor(messageWorker: MessageWorker) extends IRecordProcessor wit
   private val CHECKPOINT_INTERVAL_MILLIS: Long = 1000L
 
   override def initialize(shardId: String) = {
-    println("Initializing record processor for shard: " + shardId)
+    log.info("Initializing record processor for shard: " + shardId)
     kinesisShardId.set(shardId)
   }
 
   override def processRecords(
     records: java.util.List[Record],
     checkpointer: IRecordProcessorCheckpointer): Unit = {
-    println(s"Processing ${records.size} records from $kinesisShardId")
 
-    import scala.collection.JavaConverters._
-
-    log.info(s"Processing ${records.size} records $kinesisShardId")
+    log.info(s"Processing ${records.size} records from $kinesisShardId")
 
     records.asScala.foreach { message =>
       ThriftDeserializer.deserializeEvent(message.getData) match {
         case Success(content) =>
-          println(content._4.id)
-          val tags = content._4.tags.map(_.id)
+          val tags: List[String] = content._4.tags.map(_.id).toList
           if (tags.exists(_ == "tone/minutebyminute")) {
-            println(s"Putting ${content._4.id} onto queue!")
+            log.info(s"Putting ${content._4.id} onto queue!")
             messageWorker.queue.send(PublishedMessage(content._4.id))}
         case Failure(t) =>
           log.error(s"Could not deserialize message: $t")
-          println(s"Could not deserialize message: $t")
       }
     }
 
@@ -91,9 +87,10 @@ class RecordProcessor(messageWorker: MessageWorker) extends IRecordProcessor wit
     }
   }
 
-  override def shutdown(checkpointer: IRecordProcessorCheckpointer,
+  override def shutdown(
+    checkpointer: IRecordProcessorCheckpointer,
     reason: ShutdownReason) = {
-    println(s"Shutting down record processor for shard: $kinesisShardId")
+    log.info(s"Shutting down record processor for shard: $kinesisShardId")
     if (reason == ShutdownReason.TERMINATE) {
       checkpointer.checkpoint()
     }
