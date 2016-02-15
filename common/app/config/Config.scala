@@ -2,10 +2,15 @@ package config
 
 import javax.inject.Inject
 
+import com.amazonaws.regions.{Regions, Region}
+
 case class GCMCredentials(apiKey: String)
 
 class Config @Inject()(config: play.Configuration) {
   val gcmSendRetries: Int = 2
+
+  val firehoseRegionName: String = Regions.EU_WEST_1.name
+  val workerQueueRegion: Region = Region.getRegion(Regions.EU_WEST_1)
 
   private val gcmKey: String =
     Option(config.getString("gcmKey"))

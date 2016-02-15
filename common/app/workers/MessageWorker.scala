@@ -3,7 +3,6 @@ package workers
 import javax.inject.{Inject, Singleton}
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-import com.amazonaws.regions.{Region, Regions}
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import config.Config
 import play.api.libs.json.Json
@@ -28,7 +27,7 @@ class MessageWorker @Inject() (
   override val queue: JsonMessageQueue[PublishedMessage] =
     JsonMessageQueue[PublishedMessage](
       new AmazonSQSAsyncClient(
-        new DefaultAWSCredentialsProviderChain()).withRegion(Region.getRegion(Regions.EU_WEST_1)),
+        new DefaultAWSCredentialsProviderChain()).withRegion(config.workerQueueRegion),
       config.messageWorkerQueue)
 
   override def process(message: SQSMessage[PublishedMessage]): Future[Unit] = {

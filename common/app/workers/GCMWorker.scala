@@ -3,7 +3,6 @@ package workers
 import javax.inject.{Inject, Singleton}
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
-import com.amazonaws.regions.{Region, Regions}
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.google.android.gcm.server.Result
 import config.Config
@@ -28,7 +27,7 @@ class GCMWorker @Inject()(
   override val queue: JsonMessageQueue[GCMMessage] =
     JsonMessageQueue[GCMMessage](
       new AmazonSQSAsyncClient(
-        new DefaultAWSCredentialsProviderChain()).withRegion(Region.getRegion(Regions.EU_WEST_1)),
+        new DefaultAWSCredentialsProviderChain()).withRegion(config.workerQueueRegion),
       config.gcmSendQueueUrl)
 
   override def process(message: SQSMessage[GCMMessage]): Future[Unit] = {
