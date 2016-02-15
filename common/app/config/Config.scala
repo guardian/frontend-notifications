@@ -1,16 +1,27 @@
 package config
 
-import play.Play
+import javax.inject.Inject
 
 case class GCMCredentials(apiKey: String)
 
-object Config {
+class Config @Inject()(config: play.Configuration) {
   private val gcmKey: String =
-    Option(Play.application().configuration().getString("gcmKey"))
+    Option(config.getString("gcmKey"))
         .getOrElse(throw new RuntimeException("No gcmKey set"))
 
   val gcm: GCMCredentials =
     GCMCredentials(gcmKey)
 
-  val gcmSendQueueUrl: Option[String] = Option(Play.application().configuration().getString("gcmSendQueueUrl"))
+  val gcmSendQueueUrl: Option[String] = Option(config.getString("gcmSendQueueUrl"))
+
+  val firehoseRole: String =
+    Option(config.getString("firehoseRole"))
+      .getOrElse(throw new RuntimeException("Property not set 'firehoseRole'"))
+
+  val firehoseStreamName: String =
+    Option(config.getString("firehoseStreamName"))
+      .getOrElse(throw new RuntimeException("Property not set 'firehoseStreamName'"))
+
+  val messageWorkerQueue: Option[String] =
+    Option(config.getString("messageWorkerQueue"))
 }
