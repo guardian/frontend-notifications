@@ -14,7 +14,7 @@ object GCMMessage {
   implicit val implicitFormat = Json.format[GCMMessage]
 }
 
-case class GCMMessage(topic: String, clientId: String)
+case class GCMMessage(topic: String, clientId: String, body: String)
 
 object GCMWorker extends JsonQueueWorker[GCMMessage] with Logging {
   import scala.concurrent.ExecutionContext.Implicits.global
@@ -26,7 +26,7 @@ object GCMWorker extends JsonQueueWorker[GCMMessage] with Logging {
     throw new RuntimeException("Required property 'gcmSendQueueUrl' not set")}
 
   override def process(message: SQSMessage[GCMMessage]): Future[Unit] = {
-    val GCMMessage(topic: String, clientId: String) = message.get
+    val GCMMessage(topic: String, clientId: String, body: String) = message.get
 
     log.info(s"Processing job for topic $topic to $clientId")
 

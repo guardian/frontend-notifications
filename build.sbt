@@ -10,7 +10,22 @@ libraryDependencies ++= Seq(
   "com.gu" %% "content-api-client" % "7.24"
 )
 
+
+
+lazy val common = (project in file("./common"))
+  .settings(
+    scalaVersion := "2.11.7",
+    libraryDependencies ++= Seq(
+      "joda-time" % "joda-time" % "2.9.2",
+      "com.amazonaws" % "aws-java-sdk" % "1.10.20",
+      "com.google.gcm" % "gcm-server" % "1.0.0"
+    )
+  )
+  .enablePlugins(PlayScala)
+
+
 lazy val capiEventWorker = (project in file("./capieventworker"))
+  .dependsOn(common)
   .settings(
     scalaVersion := "2.11.7",
     libraryDependencies ++= Seq(
@@ -38,13 +53,12 @@ lazy val capiEventWorker = (project in file("./capieventworker"))
   )
 
 lazy val messageWorker = (project in file("./messageworker"))
+  .dependsOn(common)
   .settings(
     scalaVersion := "2.11.7",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
-      "com.google.gcm" % "gcm-server" % "1.0.0",
-      "com.amazonaws" % "aws-java-sdk" % "1.10.20",
-      "com.amazonaws" % "amazon-kinesis-client" % "1.6.1"
+      "com.amazonaws" % "aws-java-sdk" % "1.10.20"
     ),
     routesGenerator := InjectedRoutesGenerator
   )
