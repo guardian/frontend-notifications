@@ -1,5 +1,7 @@
 package workers
 
+import javax.inject.{Inject, Singleton}
+
 import com.amazonaws.auth.{AWSCredentialsProvider, DefaultAWSCredentialsProviderChain}
 import com.amazonaws.regions.{Region, Regions}
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
@@ -16,10 +18,13 @@ object GCMMessage {
 
 case class GCMMessage(topic: String, clientId: String, body: String)
 
-object GCMWorker extends JsonQueueWorker[GCMMessage] with Logging {
+@Singleton
+class GCMWorker @Inject()(
+  config: Config,
+  gcm: GCM) extends JsonQueueWorker[GCMMessage] with Logging {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  override val queue = Config.gcmSendQueueUrl.map { queueUrl =>
+  override val queue = config.gcmSendQueueUrl.map { queueUrl =>
     val credentials: AWSCredentialsProvider = new DefaultAWSCredentialsProviderChain()
     JsonMessageQueue[GCMMessage](new AmazonSQSAsyncClient(credentials).withRegion(Region.getRegion(Regions.EU_WEST_1)), queueUrl)
   } getOrElse {
@@ -30,7 +35,7 @@ object GCMWorker extends JsonQueueWorker[GCMMessage] with Logging {
 
     log.info(s"Processing job for topic $topic to $clientId")
 
-    val futureResult = GCM.sendGcmNotification(GCMNotification("title", "body"), clientId)
+    val futureResult = gcm.sendGcmNotification(GCMNotification("title", "body"), clientId)
 
     futureResult.onComplete {
       case Success(result) => log.info(s"Successfully sent notification to $clientId: ${message.handle.get}")
