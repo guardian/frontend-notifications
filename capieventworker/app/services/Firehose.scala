@@ -2,6 +2,7 @@ package services
 
 import java.net.InetAddress
 import java.util.UUID
+import java.util.concurrent.atomic.{AtomicReference, AtomicLong}
 import javax.inject.{Inject, Singleton}
 
 import com.amazonaws.auth.{AWSCredentialsProvider, DefaultAWSCredentialsProviderChain, STSAssumeRoleSessionCredentialsProvider}
@@ -52,17 +53,18 @@ class RecordProcessorFactory(messageWorker: MessageWorker) extends IRecordProces
 
 class RecordProcessor(messageWorker: MessageWorker) extends IRecordProcessor with Logging {
 
-  private var kinesisShardId: String = _
-  private var nextCheckpointTimeInMillis: Long = _
+  private val kinesisShardId: AtomicReference[String] = new AtomicReference("")
+  private val nextCheckpointTimeInMillis: AtomicLong = new AtomicLong(0L)
   private val CHECKPOINT_INTERVAL_MILLIS: Long = 1000L
 
   override def initialize(shardId: String) = {
     println("Initializing record processor for shard: " + shardId)
-    this.kinesisShardId = shardId
+    kinesisShardId.set(shardId)
   }
 
-  override def processRecords(records: java.util.List[Record],
-    checkpointer: IRecordProcessorCheckpointer) = {
+  override def processRecords(
+    records: java.util.List[Record],
+    checkpointer: IRecordProcessorCheckpointer): Unit = {
     println(s"Processing ${records.size} records from $kinesisShardId")
 
     import scala.collection.JavaConverters._
@@ -83,10 +85,9 @@ class RecordProcessor(messageWorker: MessageWorker) extends IRecordProcessor wit
       }
     }
 
-    if (System.currentTimeMillis() > nextCheckpointTimeInMillis) {
+    if (System.currentTimeMillis() > nextCheckpointTimeInMillis.get()) {
       checkpointer.checkpoint()
-      nextCheckpointTimeInMillis =
-        System.currentTimeMillis + CHECKPOINT_INTERVAL_MILLIS
+      nextCheckpointTimeInMillis.set(System.currentTimeMillis + CHECKPOINT_INTERVAL_MILLIS)
     }
   }
 
