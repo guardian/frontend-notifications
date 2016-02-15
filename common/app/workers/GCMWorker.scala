@@ -24,11 +24,11 @@ class GCMWorker @Inject()(
   gcm: GCM) extends JsonQueueWorker[GCMMessage] with Logging {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  override val queue = config.gcmSendQueueUrl.map { queueUrl =>
-    val credentials: AWSCredentialsProvider = new DefaultAWSCredentialsProviderChain()
-    JsonMessageQueue[GCMMessage](new AmazonSQSAsyncClient(credentials).withRegion(Region.getRegion(Regions.EU_WEST_1)), queueUrl)
-  } getOrElse {
-    throw new RuntimeException("Required property 'gcmSendQueueUrl' not set")}
+  override val queue: JsonMessageQueue[GCMMessage] =
+    JsonMessageQueue[GCMMessage](
+      new AmazonSQSAsyncClient(
+        new DefaultAWSCredentialsProviderChain()).withRegion(Region.getRegion(Regions.EU_WEST_1)),
+      config.gcmSendQueueUrl)
 
   override def process(message: SQSMessage[GCMMessage]): Future[Unit] = {
     val GCMMessage(topic: String, clientId: String, body: String) = message.get

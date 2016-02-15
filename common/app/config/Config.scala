@@ -12,7 +12,9 @@ class Config @Inject()(config: play.Configuration) {
   val gcm: GCMCredentials =
     GCMCredentials(gcmKey)
 
-  val gcmSendQueueUrl: Option[String] = Option(config.getString("gcmSendQueueUrl"))
+  val gcmSendQueueUrl: String =
+    Option(config.getString("gcmSendQueueUrl"))
+      .getOrElse("Required property 'gcmSendQueueUrl' not set")
 
   val firehoseRole: String =
     Option(config.getString("firehoseRole"))
