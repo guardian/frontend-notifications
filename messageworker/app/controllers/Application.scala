@@ -38,7 +38,7 @@ class Application @Inject() (
 
     val maybeGCMMessage: Option[GCMMessage] = for {
       browserId <- requestMap.get("browserId").map(_.mkString)
-      title <- requestMap.get("topic").map(_.mkString)
+      title <- requestMap.get("title").map(_.mkString)
       body <- requestMap.get("body").map(_.mkString)
     } yield GCMMessage(browserId, "notopic", title, body)
 
