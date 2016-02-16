@@ -7,6 +7,8 @@ import com.amazonaws.regions.{Regions, Region}
 class Config @Inject()(config: play.Configuration) {
   val gcmSendRetries: Int = 2
 
+  val NotificationMessagesTableName: String = "frontend-notification-messages"
+
   val firehoseRegionName: String = Regions.EU_WEST_1.getName
   val workerQueueRegion: Region = Region.getRegion(Regions.EU_WEST_1)
 
