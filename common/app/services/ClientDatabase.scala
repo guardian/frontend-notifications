@@ -4,7 +4,7 @@ import javax.inject.{Inject, Singleton}
 
 import com.amazonaws.regions.{Region, Regions}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient
-import com.amazonaws.services.dynamodbv2.model.{ScanRequest, AttributeValue, QueryRequest}
+import com.amazonaws.services.dynamodbv2.model.{AttributeValue, QueryRequest}
 import config.Config
 
 import scala.collection.JavaConverters._
