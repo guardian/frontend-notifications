@@ -8,12 +8,20 @@ Parameters:
   GCMWorkerQueueName:
     Description: The name of the GCM work queue
     Type: String
+  TopicMessageQueueName:
+    Description: The name of the topic message queue
+    Type: String
 
 Resources:
   GCMWorkerQueue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: {Ref: GCMWorkerQueueName}
+
+  TopicMessageQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: {Ref: TopicMessageQueueName}
 
   GCMSubscriptionsTable:
     Type: AWS::DynamoDB::Table
