@@ -28,7 +28,14 @@ class GCM @Inject()(config: Config) {
   def sendSingle(gcmNotification: GCMNotification, browserId: String): Future[Result] =
     Future.apply(gcmClient.send(GCMNotification.toMessage(gcmNotification), browserId, config.gcmSendRetries))
 
-  def sendMulticast(gcmNotification: GCMNotification, listOfBrowserIds: List[BrowserId]): Future[MulticastResult] =
-    Future.apply(gcmClient.send(GCMNotification.toMessage(gcmNotification), listOfBrowserIds.map(_.get).asJava, config.gcmSendRetries))
+  def sendMulticast(gcmNotification: Option[GCMNotification], listOfBrowserIds: List[BrowserId]): Future[MulticastResult] = {
+    val message: Message = gcmNotification match {
+      case None => GCMNotification.toMessage(GCMNotification("", ""))
+      case Some(n) => GCMNotification.toMessage(n)}
+
+    Future.apply(gcmClient.send(message, listOfBrowserIds.map(_.get).asJava, config.gcmSendRetries))}
+
+  def sendMulticastWithoutPayload(listOfBrowserIds: List[BrowserId]): Future[MulticastResult] =
+    sendMulticast(None, listOfBrowserIds)
 
 }
