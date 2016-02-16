@@ -29,6 +29,7 @@ class MessageDatabase @Inject()(
               new AttributeValue().withM(
                 Map(
                   "topic" -> new AttributeValue().withS(gcmMessage.topic),
+                  "title" -> new AttributeValue().withS(gcmMessage.title),
                   "body" -> new AttributeValue().withS(gcmMessage.body)
                 ).asJava))
           ).asJava)
