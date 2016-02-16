@@ -14,7 +14,7 @@ object PublishedMessage {
   implicit val implicitFormat = Json.format[PublishedMessage]
 }
 
-case class PublishedMessage(topic: String)
+case class PublishedMessage(topic: String) extends AnyVal
 
 @Singleton
 class MessageWorker @Inject() (
