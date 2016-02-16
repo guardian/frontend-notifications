@@ -40,7 +40,8 @@ class Application @Inject() (
       browserId <- requestMap.get("browserId").map(_.mkString)
       title <- requestMap.get("title").map(_.mkString)
       body <- requestMap.get("body").map(_.mkString)
-    } yield GCMMessage(browserId, "notopic", title, body)
+      topicId <- requestMap.get("topicId").map(_.mkString)
+    } yield GCMMessage(browserId, topicId, title, body)
 
     maybeGCMMessage match {
       case None => Future.successful(InternalServerError(s"Invalid parameters for $requestMap"))
