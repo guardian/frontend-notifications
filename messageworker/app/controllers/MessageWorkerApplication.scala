@@ -9,7 +9,7 @@ import workers._
 import scala.concurrent.Future
 
 @Singleton
-class Application @Inject() (
+class MessageWorkerApplication @Inject() (
   gcmWorkerModule: GCMWorkerModule,
   gcm: GCM,
   gCMWorker: GCMWorker,
