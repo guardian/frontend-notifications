@@ -22,6 +22,7 @@ class ClientDatabase @Inject()(
     val queryRequest =
       new QueryRequest()
         .withTableName(TableName)
+        .withLimit(1000)
         .withKeyConditionExpression(s"notificationTopicId = :topic")
         .withExpressionAttributeValues(
           Map(":topic" -> new AttributeValue().withS(topic)).asJava)
