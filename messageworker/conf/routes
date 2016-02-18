@@ -1,8 +1,8 @@
-GET / controllers.Application.index()
+GET / controllers.MessageWorkerApplication.index()
 
-POST /sendto/*browserId controllers.Application.sendTo(browserId)
+POST /sendto/*browserId controllers.MessageWorkerApplication.sendTo(browserId)
 
 GET /_healthcheck controllers.Healthcheck.healthcheck()
 
-GET  /send controllers.Application.send()
-POST /send controllers.Application.sendToOne()
+GET  /send controllers.MessageWorkerApplication.send()
+POST /send controllers.MessageWorkerApplication.sendToOne()
