@@ -35,12 +35,10 @@ class MessageWorker @Inject() (
 
     log.info(s"Processing job for topic $topic")
 
-    clientDatabase.getIdsByTopic(topic).map{ listOfBrowserIds =>
+    clientDatabase.getIdsByTopic(topic).map { listOfBrowserIds =>
       listOfBrowserIds.foreach { browserId =>
         val gcmMessage: GCMMessage = GCMMessage(browserId.get, topic, s"Message for $topic", s"You got a new notification for $topic")
-        messageDatabase.leaveMessage(gcmMessage)
-        gcmWorker.queue.send(List(gcmMessage))
-      }
-    }
+        messageDatabase.leaveMessage(gcmMessage).map { _ =>
+          gcmWorker.queue.send(List(gcmMessage))}}}
   }
 }
