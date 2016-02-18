@@ -46,9 +46,11 @@ class MessageWorkerApplication @Inject() (
     maybeGCMMessage match {
       case None => Future.successful(InternalServerError(s"Invalid parameters for $requestMap"))
       case Some(gcmMessage) =>
-        messageDatabase.leaveMessage(gcmMessage)
-        gCMWorker.queue.send(List(gcmMessage)).map { result =>
-          Ok(s"Message sent: ${result.getMessageId}")}
+        (for {
+          putItemResult <- messageDatabase.leaveMessage(gcmMessage)
+          sendMessageResult <- gCMWorker.queue.send(List(gcmMessage))}
+         yield {
+          Ok(s"Message sent: ${sendMessageResult.getMessageId}")})
         .recover { case t => InternalServerError(t.toString)}}
   }
 }
