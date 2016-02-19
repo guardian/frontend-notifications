@@ -4,6 +4,8 @@ import javax.inject.Inject
 
 import com.amazonaws.regions.{Regions, Region}
 
+import scala.util.Try
+
 class Config @Inject()(config: play.Configuration) {
   val gcmSendRetries: Int = 2
 
@@ -20,6 +22,12 @@ class Config @Inject()(config: play.Configuration) {
   val firehoseStreamName: String = getMandatoryProperty("firehoseStreamName")
 
   val messageWorkerQueue: String = getMandatoryProperty("messageWorkerQueue")
+
+  val redisMessageCacheHost: String = getMandatoryProperty("redisMessageCacheHost")
+  val redisMessageCachePort: Int =
+    Try(getMandatoryProperty("redisMessageCachePort"))
+      .map(_.toInt)
+      .getOrElse(throw new RuntimeException("Can't convert redisMessageCachePort to an integer"))
 
   def getMandatoryProperty(propertyName: String): String =
     Option(config.getString(propertyName))
