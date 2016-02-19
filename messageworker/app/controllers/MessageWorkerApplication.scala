@@ -3,7 +3,7 @@ package controllers
 import javax.inject.{Inject, Singleton}
 
 import play.api.mvc.{Action, Controller}
-import services.{GCM, GCMNotification, MessageDatabase}
+import services._
 import workers._
 
 import scala.concurrent.Future
@@ -14,7 +14,9 @@ class MessageWorkerApplication @Inject() (
   gcm: GCM,
   gCMWorker: GCMWorker,
   messageWorker: MessageWorkerModule,
-  messageDatabase: MessageDatabase) extends Controller {
+  redisMessageDatabaseModule: RedisMessageDatabaseModule) extends Controller {
+
+  val redisMessageDatabase: RedisMessageDatabase = redisMessageDatabaseModule.redisMessageDatabase
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -47,7 +49,7 @@ class MessageWorkerApplication @Inject() (
       case None => Future.successful(InternalServerError(s"Invalid parameters for $requestMap"))
       case Some(gcmMessage) =>
         (for {
-          putItemResult <- messageDatabase.leaveMessage(gcmMessage)
+          putItemResult <- redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage)
           sendMessageResult <- gCMWorker.queue.send(List(gcmMessage))}
          yield {
           Ok(s"Message sent: ${sendMessageResult.getMessageId}")})
