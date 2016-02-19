@@ -18,7 +18,8 @@ lazy val common = (project in file("./common"))
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
       "com.amazonaws" % "aws-java-sdk" % "1.10.20",
-      "com.google.gcm" % "gcm-server" % "1.0.0"
+      "com.google.gcm" % "gcm-server" % "1.0.0",
+      "com.github.etaty" %% "rediscala" % "1.6.0"
     )
   )
   .enablePlugins(PlayScala)
