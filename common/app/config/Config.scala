@@ -23,5 +23,5 @@ class Config @Inject()(config: play.Configuration) {
 
   def getMandatoryProperty(propertyName: String): String =
     Option(config.getString(propertyName))
-      .getOrElse(s"Required property '$propertyName' not set")
+      .getOrElse(throw new RuntimeException(s"Required property '$propertyName' not set"))
 }
