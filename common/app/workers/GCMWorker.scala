@@ -38,11 +38,13 @@ class GCMWorker @Inject()(
       .map(BrowserId)
 
     log.info(s"Processing job for ${listOfMessages.size} clients")
+    log.info(s"Processing job for $browserIds")
 
     val futureResult: Future[MulticastResult] = gcm.sendMulticast(None, browserIds)
 
     futureResult.onComplete {
       case Success(multicastResult) =>
+        log.info(s"Multicast Result $multicastResult")
         log.info(s"Successfully sent notification to ${multicastResult.getSuccess}: ${message.handle.get}")
         if (multicastResult.getFailure > 0) {
           log.error(s"Error sending notifications to ${multicastResult.getFailure}")}
