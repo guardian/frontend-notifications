@@ -20,9 +20,11 @@ case class PublishedMessage(topic: String) extends AnyVal
 class MessageWorker @Inject() (
   config: Config,
   gcmWorker: GCMWorker,
-  messageDatabase: MessageDatabase,
+  redisMessageDatabaseModule: RedisMessageDatabaseModule,
   clientDatabase: ClientDatabase) extends JsonQueueWorker[PublishedMessage] with Logging {
   import scala.concurrent.ExecutionContext.Implicits.global
+
+  val redisMessageDatabase: RedisMessageDatabase = redisMessageDatabaseModule.redisMessageDatabase
 
   override val queue: JsonMessageQueue[PublishedMessage] =
     JsonMessageQueue[PublishedMessage](
@@ -38,7 +40,7 @@ class MessageWorker @Inject() (
     clientDatabase.getIdsByTopic(topic).map { listOfBrowserIds =>
       listOfBrowserIds.foreach { browserId =>
         val gcmMessage: GCMMessage = GCMMessage(browserId.get, topic, s"Message for $topic", s"You got a new notification for $topic")
-        messageDatabase.leaveMessage(gcmMessage).map { _ =>
+        redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
           gcmWorker.queue.send(List(gcmMessage))}}}
   }
 }
