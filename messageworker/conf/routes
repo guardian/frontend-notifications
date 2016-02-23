@@ -6,3 +6,5 @@ GET /_healthcheck controllers.Healthcheck.healthcheck()
 
 GET  /send controllers.MessageWorkerApplication.send()
 POST /send controllers.MessageWorkerApplication.sendToOne()
+
+GET /info controllers.MessageWorkerApplication.info()

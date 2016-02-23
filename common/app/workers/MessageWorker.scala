@@ -37,10 +37,13 @@ class MessageWorker @Inject() (
 
     log.info(s"Processing job for topic $topic")
 
+    ServerStatistics.recordsProcessed.incrementAndGet()
+
     clientDatabase.getIdsByTopic(topic).map { listOfBrowserIds =>
       listOfBrowserIds.foreach { browserId =>
         val gcmMessage: GCMMessage = GCMMessage(browserId.get, topic, s"Message for $topic", s"You got a new notification for $topic")
         redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
+          ServerStatistics.gcmMessagesSent.incrementAndGet()
           gcmWorker.queue.send(List(gcmMessage))}}}
   }
 }

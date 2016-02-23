@@ -24,6 +24,11 @@ class MessageWorkerApplication @Inject() (
     Ok("Index OK from Application")
   }
 
+  def info = Action {
+    Ok(s"SQS Records Processed: ${ServerStatistics.recordsProcessed.get()}\n" +
+      s"GCM Messages Sent: ${ServerStatistics.gcmMessagesSent.get()}")
+  }
+
   def sendTo(browserId: String) = Action.async {
     gcm.sendSingle(GCMNotification("Test title", "message"), browserId)
       .map{ result =>
