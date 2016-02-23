@@ -55,6 +55,7 @@ class MessageWorkerApplication @Inject() (
       case Some(gcmMessage) =>
         (for {
           putItemResult <- redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage)
+          _ = ServerStatistics.gcmMessagesSent.incrementAndGet()
           sendMessageResult <- gCMWorker.queue.send(List(gcmMessage))}
          yield {
           Ok(s"Message sent: ${sendMessageResult.getMessageId}")})
