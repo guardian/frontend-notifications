@@ -69,11 +69,14 @@ class RecordProcessor(messageWorker: MessageWorker) extends IRecordProcessor wit
 
     log.info(s"Processing ${records.size} records from $kinesisShardId")
 
+    ServerStatistics.capiEventsReceived.addAndGet(records.size.toLong)
+
     records.asScala.foreach { message =>
       ThriftDeserializer.deserializeEvent(message.getData) match {
         case Success(content) =>
           val tags: List[String] = content._4.tags.map(_.id).toList
           if (tags.exists(_ == "tone/minutebyminute")) {
+            ServerStatistics.capiEventsProcessed.incrementAndGet()
             log.info(s"Putting ${content._4.id} onto queue!")
             messageWorker.queue.send(PublishedMessage(content._4.id))}
         case Failure(t) =>

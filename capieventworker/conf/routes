@@ -1,3 +1,5 @@
 GET / controllers.CapiEventWorkerApplication.index()
 
 GET /_healthcheck controllers.Healthcheck.healthcheck()
+
+GET /info controllers.CapiEventWorkerApplication.info()
