@@ -11,6 +11,7 @@ class Config @Inject()(config: play.Configuration) {
 
   val NotificationMessagesTableName: String = "frontend-notification-messages"
   val ClientDatabaseTableName: String = "frontend-notifications"
+  val LastSentTableName: String = "frontend-notifications-last-sent"
 
   val firehoseRegionName: String = Regions.EU_WEST_1.getName
   val workerQueueRegion: Region = Region.getRegion(Regions.EU_WEST_1)
