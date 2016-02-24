@@ -14,6 +14,9 @@ Parameters:
   TopicMessageQueueName:
     Description: The name of the topic message queue
     Type: String
+  LastSentTableName:
+    Description: The name of the last sent message database
+    Type: String
 
 Resources:
   GCMWorkerQueue:
@@ -36,6 +39,18 @@ Resources:
       AttributeDefinitions:
         - {AttributeName: notificationTopicId, AttributeType: S}
         - {AttributeName: gcmBrowserId, AttributeType: S}
+      ProvisionedThroughput:
+        ReadCapacityUnits: 10
+        WriteCapacityUnits: 10
+
+  LastSentTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: {Ref: LastSentTableName}
+      KeySchema:
+        - {AttributeName: topicId, KeyType: HASH}
+      AttributeDefinitions:
+        - {AttributeName: topicId, AttributeType: S}
       ProvisionedThroughput:
         ReadCapacityUnits: 10
         WriteCapacityUnits: 10
