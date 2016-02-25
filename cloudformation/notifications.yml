@@ -17,6 +17,9 @@ Parameters:
   LastSentTableName:
     Description: The name of the last sent message database
     Type: String
+  FrontendNotificationMessagesCacheClusterName:
+    Description: The name of the notification messages cache cluster
+    Type: String
 
 Resources:
   GCMWorkerQueue:
@@ -66,3 +69,48 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 10
         WriteCapacityUnits: 10
+
+  FrontendNotificationsVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.248.121.0/22
+      Tags:
+        - {Key: Name, Value: frontend-notifications}
+
+  ElasticacheSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.248.121.0/22
+      VpcId: {Ref: FrontendNotificationsVPC}
+
+  ElasticacheSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: Frontend notification elasticache messages subnet group
+      SubnetIds:
+        - {Ref: ElasticacheSubnet}
+
+  ElasticacheSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: {Ref: FrontendNotificationsVPC}
+      GroupDescription: Frontend Notification Messages security group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          CidrIp: 0.0.0.0/0
+
+  FrontendNotificationMessagesCacheCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      ClusterName: {Ref: FrontendNotificationMessagesCacheClusterName}
+      CacheSubnetGroupName: {Ref: ElasticacheSubnetGroup}
+      VpcSecurityGroupIds:
+        - {Ref: ElasticacheSecurityGroup}
+      CacheNodeType: cache.t2.small
+      #1 CPU 1.5GB Memory, next up is cache.t2.medium 2CPU 3.2GB Memory
+      AutoMinorVersionUpgrade: "true"
+      Engine: redis
+      NumCacheNodes: 1
+
