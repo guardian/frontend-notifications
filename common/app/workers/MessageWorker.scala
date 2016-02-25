@@ -21,7 +21,8 @@ class MessageWorker @Inject() (
   config: Config,
   gcmWorker: GCMWorker,
   redisMessageDatabaseModule: RedisMessageDatabaseModule,
-  clientDatabase: ClientDatabase) extends JsonQueueWorker[PublishedMessage] with Logging {
+  clientDatabase: ClientDatabase,
+  lastSentDatabase: LastSentDatabase) extends JsonQueueWorker[PublishedMessage] with Logging {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val redisMessageDatabase: RedisMessageDatabase = redisMessageDatabaseModule.redisMessageDatabase
@@ -39,11 +40,16 @@ class MessageWorker @Inject() (
 
     ServerStatistics.recordsProcessed.incrementAndGet()
 
-    clientDatabase.getIdsByTopic(topic).map { listOfBrowserIds =>
-      listOfBrowserIds.foreach { browserId =>
-        val gcmMessage: GCMMessage = GCMMessage(browserId.get, topic, s"Message for $topic", s"You got a new notification for $topic")
-        redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
-          ServerStatistics.gcmMessagesSent.incrementAndGet()
-          gcmWorker.queue.send(List(gcmMessage))}}}
+    lastSentDatabase.updateTopic(topic).flatMap {
+      case lastSentDatabase.ShouldNotSend => Future.successful(())
+      case lastSentDatabase.ShouldSend =>
+        clientDatabase.getIdsByTopic(topic).map { listOfBrowserIds =>
+          listOfBrowserIds.foreach { browserId =>
+            val gcmMessage: GCMMessage = GCMMessage(browserId.get, topic, s"Message for $topic", s"You got a new notification for $topic")
+            redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
+              ServerStatistics.gcmMessagesSent.incrementAndGet()
+              gcmWorker.queue.send(List(gcmMessage))}}}
+    }
+
   }
 }
