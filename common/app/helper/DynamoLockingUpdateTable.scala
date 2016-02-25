@@ -1,8 +1,8 @@
 package helper
 
 import awswrappers.dynamodb._
-import com.amazonaws.regions.{Regions, Region}
-import com.amazonaws.services.dynamodbv2.{AmazonDynamoDBClient, AmazonDynamoDBAsyncClient}
+import com.amazonaws.regions.{Region, Regions}
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient
 import com.amazonaws.services.dynamodbv2.model._
 import helper.DynamoFormat.DynamoFormat
 
