@@ -73,22 +73,46 @@ Resources:
   FrontendNotificationsVPC:
     Type: AWS::EC2::VPC
     Properties:
-      CidrBlock: 10.248.121.0/22
+      CidrBlock: 10.248.120.0/22
       Tags:
         - {Key: Name, Value: frontend-notifications}
 
-  ElasticacheSubnet:
+  FrontendNotificationsSubnetOne:
     Type: AWS::EC2::Subnet
     Properties:
-      CidrBlock: 10.248.121.0/22
+      CidrBlock: 10.248.120.0/24
       VpcId: {Ref: FrontendNotificationsVPC}
+      AvailabilityZone: eu-west-1a
+      Tags:
+        - {Key: Name, Value: frontend-notifications-eu-west-1a}
+
+  FrontendNotificationsSubnetTwo:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.248.121.0/24
+      VpcId: {Ref: FrontendNotificationsVPC}
+      AvailabilityZone: eu-west-1b
+      Tags:
+        - {Key: Name, Value: frontend-notifications-eu-west-1b}
+
+  FrontendNotificationsSubnetThree:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: 10.248.122.0/24
+      VpcId: {Ref: FrontendNotificationsVPC}
+      AvailabilityZone: eu-west-1c
+      Tags:
+        - {Key: Name, Value: frontend-notifications-eu-west-1c}
+
 
   ElasticacheSubnetGroup:
     Type: AWS::ElastiCache::SubnetGroup
     Properties:
       Description: Frontend notification elasticache messages subnet group
       SubnetIds:
-        - {Ref: ElasticacheSubnet}
+        - {Ref: FrontendNotificationsSubnetOne}
+        - {Ref: FrontendNotificationsSubnetTwo}
+        - {Ref: FrontendNotificationsSubnetThree}
 
   ElasticacheSecurityGroup:
     Type: AWS::EC2::SecurityGroup
