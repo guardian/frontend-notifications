@@ -20,6 +20,9 @@ Parameters:
   FrontendNotificationMessagesCacheClusterName:
     Description: The name of the notification messages cache cluster
     Type: String
+  InstanceImageId:
+    Description: The id of the instance image
+    Type: String
 
 Resources:
   GCMWorkerQueue:
@@ -137,4 +140,144 @@ Resources:
       AutoMinorVersionUpgrade: "true"
       Engine: redis
       NumCacheNodes: 1
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: Frontend-Notifications
+
+  GatewayAttachment:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      VpcId:
+        {Ref: FrontendNotificationsVPC}
+      InternetGatewayId:
+        {Ref: InternetGateway}
+
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal: { Service: [ec2.amazonaws.com] }
+          Action:
+            - sts:AssumeRole
+  Policy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: FrontendNotificationsPolicy
+      PolicyDocument:
+        Statement:
+        - Action:
+            - dynamodb:*
+          Effect: Allow
+          Resource:
+            Fn::Join: [":", ["arn:aws:dynamodb", {Ref: AWS::Region}, {Ref: AWS::AccountId}, ":table/", {Ref: GCMSubscriptionsTableName}]]
+        - Action:
+            - dynamodb:*
+          Effect: Allow
+          Resource:
+            Fn::Join: [":", ["arn:aws:dynamodb", {Ref: AWS::Region}, {Ref: AWS::AccountId}, ":table/", {Ref: LastSentTableName}]]
+        - Action:
+            - EC2:Describe*
+          Effect: Allow
+          Resource: "*"
+        - Action:
+            - S3:getObject
+          Effect: Allow
+          Resource:
+            - arn:aws:s3:::github-team-keys/*
+        - Action:
+            - s3:ListBucket
+          Effect: Allow
+          Resource:
+            - arn:aws:s3:::github-team-keys
+      Roles:
+      - {Ref: Role}
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+      - {Ref: Role}
+
+  CAPIEventWorkerELBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: frontend-notifications-capi-event-worker
+      VpcId: {Ref: FrontendNotificationsVPC}
+      SecurityGroupIngress:
+      - {IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0}
+      - {IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0}
+
+  CAPIEventWorkerELB:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      SecurityGroups:
+      - {Ref: CAPIEventWorkerELBSecurityGroup}
+      Subnets:
+        - {Ref: FrontendNotificationsSubnetOne}
+        - {Ref: FrontendNotificationsSubnetTwo}
+        - {Ref: FrontendNotificationsSubnetThree}
+      Scheme: internet-facing
+      Listeners:
+      - {LoadBalancerPort: 80, InstancePort: 9000, Protocol: HTTP}
+      HealthCheck:
+        Target: 'HTTP:9000/_healthcheck'
+        HealthyThreshold: 2
+        UnhealthyThreshold: 2
+        Interval: 10
+        Timeout: 5
+
+  CAPIEventWorkerASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AvailabilityZones: {'Fn::GetAZs': ''}
+      VPCZoneIdentifier:
+        - {Ref: FrontendNotificationsSubnetOne}
+        - {Ref: FrontendNotificationsSubnetTwo}
+        - {Ref: FrontendNotificationsSubnetThree}
+      LaunchConfigurationName: {Ref: CAPIEventWorkerLaunchConfig}
+      MinSize: 1
+      MaxSize: 2
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 300
+      LoadBalancerNames:
+      - {Ref: CAPIEventWorkerELB}
+      Tags:
+      - {Key: Stage, Value: CODE, PropagateAtLaunch: true}
+      - {Key: Stack, Value: frontend-notifications, PropagateAtLaunch: true}
+      - {Key: App, Value: capi-event-worker, PropagateAtLaunch: true}
+      - {Key: Management, Value: port=9000, PropagateAtLaunch: true}
+
+  CAPIEventWorkerLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      #KeyName: frontend-notifications-capi-event-worker
+      ImageId: {Ref: InstanceImageId}
+      SecurityGroups:
+      - {Ref: CAPIEventWorkerInstanceSecurityGroup}
+      InstanceType: t2.small
+      IamInstanceProfile: {Ref: InstanceProfile}
+      AssociatePublicIpAddress: true
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash -ev
+          aws s3 cp s3://aws-frontend-artifacts/frontend/CODE/capieventworker/frontend-notifications.properties /etc/gu/frontend-notifications.properties
+          /opt/features/ssh-keys/initialise-keys-and-cron-job.sh -b github-team-keys -t Guardian-Frontend
+          /opt/features/native-packager/install.sh -b aws-frontend-artifacts -s -t tgz
+
+  CAPIEventWorkerInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Frontend notifications CAPI event worker
+      VpcId: {Ref: FrontendNotificationsVPC}
+      SecurityGroupIngress:
+      - {IpProtocol: tcp, FromPort: 9000, ToPort: 9000, SourceSecurityGroupId: {Ref: CAPIEventWorkerELBSecurityGroup} }
+      - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 77.91.248.0/21 }
 
