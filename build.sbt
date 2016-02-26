@@ -1,5 +1,7 @@
 import com.twitter.scrooge.ScroogeSBT
 
+def env(key: String): Option[String] = Option(System.getenv(key))
+
 scalaVersion := "2.11.7"
 
 resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/"
@@ -28,6 +30,7 @@ lazy val common = (project in file("./common"))
 lazy val capiEventWorker = (project in file("./capieventworker"))
   .dependsOn(common)
   .settings(
+    name := "capi-event-worker",
     scalaVersion := "2.11.7",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
@@ -35,9 +38,16 @@ lazy val capiEventWorker = (project in file("./capieventworker"))
       "com.amazonaws" % "amazon-kinesis-client" % "1.6.1",
       "com.gu" %% "content-api-client" % "7.24"
     ),
-    routesGenerator := InjectedRoutesGenerator
+    routesGenerator := InjectedRoutesGenerator,
+    packageName in Universal := normalizedName.value,
+    topLevelDirectory in Universal := Some(normalizedName.value),
+    riffRaffPackageType := (packageZipTarball in Universal).value,
+    riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
+    riffRaffUploadManifestBucket := Option("riffraff-builds"),
+    riffRaffManifestProjectName := "dotcom:notifications:capieventworker",
+    riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
   )
-  .enablePlugins(PlayScala)
+  .enablePlugins(PlayScala, RiffRaffArtifact, UniversalPlugin)
   .settings(ScroogeSBT.newSettings: _*)
   .settings(
     scalaVersion := "2.11.7",
