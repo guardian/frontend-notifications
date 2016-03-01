@@ -156,6 +156,41 @@ Resources:
       InternetGatewayId:
         {Ref: InternetGateway}
 
+  # -- Routing --
+  MainRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        {Ref: FrontendNotificationsVPC}
+      Tags:
+        - Key: Name
+          Value: Frontend-Notifications
+
+  MainRouteTableInternetRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: {Ref: MainRouteTable}
+      GatewayId: {Ref: InternetGateway}
+      DestinationCidrBlock: 0.0.0.0/0
+
+  MainRouteTableInternetRouteSubnetOne:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: {Ref: MainRouteTable}
+      SubnetId: {Ref: FrontendNotificationsSubnetOne}
+
+  MainRouteTableInternetRouteSubnetTwo:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: {Ref: MainRouteTable}
+      SubnetId: {Ref: FrontendNotificationsSubnetTwo}
+
+  MainRouteTableInternetRouteSubnetThree:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: {Ref: MainRouteTable}
+      SubnetId: {Ref: FrontendNotificationsSubnetThree}
+
   Role:
     Type: AWS::IAM::Role
     Properties:
