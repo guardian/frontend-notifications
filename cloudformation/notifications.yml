@@ -303,8 +303,8 @@ Resources:
       UserData:
         Fn::Base64: |
           #!/bin/bash -ev
-          aws s3 cp s3://aws-frontend-artifacts/frontend/CODE/capieventworker/frontend-notifications.properties /etc/gu/frontend-notifications.properties
-          /opt/features/ssh-keys/initialise-keys-and-cron-job.sh -b github-team-keys -t Guardian-Frontend
+          aws s3 cp s3://aws-frontend-artifacts/frontend-notifications/CODE/capi-event-worker/frontend-notifications.properties /etc/gu/frontend-notifications.properties
+          /opt/features/ssh-keys/initialise-keys-and-cron-job.sh -l -b github-team-keys -t Guardian-Frontend
           /opt/features/native-packager/install.sh -b aws-frontend-artifacts -s -t tgz
 
   CAPIEventWorkerInstanceSecurityGroup:
