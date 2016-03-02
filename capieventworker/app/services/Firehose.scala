@@ -26,6 +26,7 @@ class Firehose @Inject() (config: Config, messageWorker: MessageWorker) {
   val stsRoleSessionName: String = "firehose"
   val firehoseCredentials: AWSCredentialsProvider =
     new STSAssumeRoleSessionCredentialsProvider(
+      localCredentials,
       config.firehoseRole,
       stsRoleSessionName)
 
