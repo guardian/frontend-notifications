@@ -353,3 +353,79 @@ Resources:
       - {IpProtocol: tcp, FromPort: 9000, ToPort: 9000, SourceSecurityGroupId: {Ref: CAPIEventWorkerELBSecurityGroup} }
       - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 77.91.248.0/21 }
 
+
+  # Message Worker
+  MessageWorkerELBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: frontend-notifications-message-worker
+      VpcId: {Ref: FrontendNotificationsVPC}
+      SecurityGroupIngress:
+      - {IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0}
+      - {IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0}
+
+  MessageWorkerELB:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      SecurityGroups:
+      - {Ref: MessageWorkerELBSecurityGroup}
+      Subnets:
+        - {Ref: FrontendNotificationsSubnetOne}
+        - {Ref: FrontendNotificationsSubnetTwo}
+        - {Ref: FrontendNotificationsSubnetThree}
+      Scheme: internet-facing
+      Listeners:
+      - {LoadBalancerPort: 80, InstancePort: 9000, Protocol: HTTP}
+      HealthCheck:
+        Target: 'HTTP:9000/_healthcheck'
+        HealthyThreshold: 2
+        UnhealthyThreshold: 2
+        Interval: 10
+        Timeout: 5
+
+  MessageWorkerASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AvailabilityZones: {'Fn::GetAZs': ''}
+      VPCZoneIdentifier:
+        - {Ref: FrontendNotificationsSubnetOne}
+        - {Ref: FrontendNotificationsSubnetTwo}
+        - {Ref: FrontendNotificationsSubnetThree}
+      LaunchConfigurationName: {Ref: MessageWorkerLaunchConfig}
+      MinSize: 1
+      MaxSize: 2
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 300
+      LoadBalancerNames:
+      - {Ref: MessageWorkerELB}
+      Tags:
+      - {Key: Stage, Value: CODE, PropagateAtLaunch: true}
+      - {Key: Stack, Value: frontend-notifications, PropagateAtLaunch: true}
+      - {Key: App, Value: message-worker, PropagateAtLaunch: true}
+      - {Key: Management, Value: port=9000, PropagateAtLaunch: true}
+
+  MessageWorkerLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: {Ref: InstanceImageId}
+      SecurityGroups:
+      - {Ref: MessageWorkerInstanceSecurityGroup}
+      InstanceType: t2.small
+      IamInstanceProfile: {Ref: InstanceProfile}
+      AssociatePublicIpAddress: true
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash -ev
+          aws s3 cp s3://aws-frontend-artifacts/frontend-notifications/CODE/capi-event-worker/frontend-notifications.properties /etc/gu/frontend-notifications.properties
+          /opt/features/ssh-keys/initialise-keys-and-cron-job.sh -l -b github-team-keys -t Guardian-Frontend
+          /opt/features/native-packager/install.sh -b aws-frontend-artifacts -s -t tgz
+
+  MessageWorkerInstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Frontend notifications CAPI event worker
+      VpcId: {Ref: FrontendNotificationsVPC}
+      SecurityGroupIngress:
+      - {IpProtocol: tcp, FromPort: 9000, ToPort: 9000, SourceSecurityGroupId: {Ref: MessageWorkerELBSecurityGroup} }
+      - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 77.91.248.0/21 }
+
