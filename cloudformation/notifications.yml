@@ -17,6 +17,9 @@ Parameters:
   LastSentTableName:
     Description: The name of the last sent message database
     Type: String
+  FirehoseLeaseTableName:
+    Description: The name of the last sent message database
+    Type: String
   FrontendNotificationMessagesCacheClusterName:
     Description: The name of the notification messages cache cluster
     Type: String
