@@ -1,8 +1,7 @@
 package services
 
-import java.net.InetAddress
 import java.util.UUID
-import java.util.concurrent.atomic.{AtomicReference, AtomicLong}
+import java.util.concurrent.atomic.{AtomicLong, AtomicReference}
 import javax.inject.{Inject, Singleton}
 
 import com.amazonaws.auth.{AWSCredentialsProvider, DefaultAWSCredentialsProviderChain, STSAssumeRoleSessionCredentialsProvider}
@@ -12,11 +11,10 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason
 import com.amazonaws.services.kinesis.metrics.impl.NullMetricsFactory
 import com.amazonaws.services.kinesis.model.Record
 import config.Config
-import org.joda.time.DateTime
 import workers.{MessageWorker, PublishedMessage}
 
-import scala.util.{Failure, Success}
 import scala.collection.JavaConverters._
+import scala.util.{Failure, Success}
 
 @Singleton
 class Firehose @Inject() (config: Config, messageWorker: MessageWorker) {
@@ -38,7 +36,7 @@ class Firehose @Inject() (config: Config, messageWorker: MessageWorker) {
     firehoseCredentials,
     localCredentials,
     localCredentials,
-    InetAddress.getLocalHost.getCanonicalHostName + ":" + UUID.randomUUID())
+    UUID.randomUUID().toString)
     .withRegionName(config.firehoseRegionName)
     .withInitialPositionInStream(InitialPositionInStream.LATEST)
 
