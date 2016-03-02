@@ -225,6 +225,16 @@ Resources:
             - S3:getObject
           Effect: Allow
           Resource:
+            - arn:aws:s3:::aws-frontend-artifacts/*
+        - Action:
+            - s3:ListBucket
+          Effect: Allow
+          Resource:
+            - arn:aws:s3:::aws-frontend-artifacts
+        - Action:
+            - S3:getObject
+          Effect: Allow
+          Resource:
             - arn:aws:s3:::github-team-keys/*
         - Action:
             - s3:ListBucket
