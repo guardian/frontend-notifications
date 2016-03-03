@@ -97,34 +97,3 @@ class DynamoLockingUpdateTable[T](
       case None => newItem(id, empty).map(Function.const(NewItem(empty)))
     }
 }
-
-object Main {
-
-  case class Messages(l: List[String])
-
-  implicit val messagesFormat: DynamoFormat.DynamoFormat[Messages] = new DynamoFormat[Messages] {
-    override def read(value: AttributeValue): Option[Messages] =
-      Option(Messages(value.getL.asScala.map(_.getS).toList))
-    override def write(value: Messages): AttributeValue =
-      new AttributeValue().withL(value.l.map(s => new AttributeValue().withS(s)).asJava)
-  }
-
-  val client: AmazonDynamoDBAsyncClient = new AmazonDynamoDBAsyncClient().withRegion(Region.getRegion(Regions.EU_WEST_1))
-
-  def main(args: Array[String]): Unit = {
-    val dynamo = new DynamoLockingUpdateTable[Messages](
-      client,
-      "frontend-notifications-last-sent",
-      "topicId",
-      "key")
-
-//    dynamo.lockingReadAndWrite("test"){messages =>
-//      messages.copy(l = messages.l :+ "hooray")
-//    }(Messages(Nil))
-
-    val result = dynamo.consistentRead("test")
-
-    result.onComplete{ r => println(s"Result: $r")}
-
-  }
-}
