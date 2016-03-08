@@ -3,11 +3,12 @@ package services
 import javax.inject.{Inject, Singleton}
 
 import akka.actor.ActorSystem
+import akka.util.ByteString
 import config.Config
 import org.joda.time.DateTime
 import play.api.inject.ApplicationLifecycle
 import play.api.libs.json.Json
-import redis.RedisClient
+import redis.{ByteStringFormatter, RedisClient}
 import redis.commands.TransactionBuilder
 import redis.protocol.MultiBulk
 import workers.GCMMessage
@@ -22,6 +23,16 @@ case class RedisMessage(topic: String, title: String, body: String, time: Long)
 
 object RedisMessage {
   implicit val redisMessageFormat = Json.format[RedisMessage]
+
+  implicit val formatter = new ByteStringFormatter[RedisMessage] {
+    override def serialize(redisMessage: RedisMessage) : ByteString = {
+      ByteString(Json.stringify(Json.toJson(redisMessage)))}
+
+    override def deserialize(bs: ByteString): RedisMessage = {
+      val redisMessage = Json.parse(bs.utf8String)
+      redisMessage.as[RedisMessage]
+    }
+  }
 
   def fromGcmMessage(gcmMessage: GCMMessage): RedisMessage =
     RedisMessage(gcmMessage.topic, gcmMessage.title, gcmMessage.body, DateTime.now.getMillis / 1000)
@@ -66,4 +77,12 @@ class RedisMessageDatabase @Inject()(
   }
 
   def leaveMessageWithDefaultExpiry(gcmMessage: GCMMessage) = leaveMessageWithExpiry(gcmMessage, defaultExpiryInSeconds)
+
+  def getMessages(gcmClientId: String) : Future[Seq[RedisMessage]] = {
+    val redisTransaction: TransactionBuilder = redis.transaction()
+    val eventualMessages: Future[Seq[RedisMessage]] = redisTransaction.lrange[RedisMessage](gcmClientId, 0, -1)
+    redisTransaction.del(gcmClientId)
+    redisTransaction.exec()
+    eventualMessages
+  }
 }
