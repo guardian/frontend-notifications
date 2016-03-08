@@ -1,0 +1,3 @@
+GET / controllers.MessageDeliveryController.index()
+
+GET /_healthcheck controllers.Healthcheck.healthcheck()
