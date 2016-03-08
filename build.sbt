@@ -82,3 +82,23 @@ lazy val messageWorker = (project in file("./messageworker"))
     riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
   )
   .enablePlugins(PlayScala, RiffRaffArtifact, UniversalPlugin)
+
+lazy val messageDelivery = (project in file("./messagedelivery"))
+  .dependsOn(common)
+  .settings(
+    name := "message-delivery",
+    scalaVersion := "2.11.7",
+    libraryDependencies ++= Seq(
+      "joda-time" % "joda-time" % "2.9.2",
+      "com.amazonaws" % "aws-java-sdk" % "1.10.20"
+    ),
+    routesGenerator := InjectedRoutesGenerator,
+    packageName in Universal := normalizedName.value,
+    topLevelDirectory in Universal := Some(normalizedName.value),
+    riffRaffPackageType := (packageZipTarball in Universal).value,
+    riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
+    riffRaffUploadManifestBucket := Option("riffraff-builds"),
+    riffRaffManifestProjectName := "dotcom:notifications:message-delivery",
+    riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
+  )
+  .enablePlugins(PlayScala, RiffRaffArtifact, UniversalPlugin)
