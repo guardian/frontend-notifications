@@ -25,7 +25,7 @@ object RedisMessage {
   implicit val redisMessageFormat = Json.format[RedisMessage]
 
   implicit val formatter = new ByteStringFormatter[RedisMessage] {
-    override def serialize(redisMessage: RedisMessage) : ByteString = {
+    override def serialize(redisMessage: RedisMessage): ByteString = {
       ByteString(Json.stringify(Json.toJson(redisMessage)))}
 
     override def deserialize(bs: ByteString): RedisMessage = {
