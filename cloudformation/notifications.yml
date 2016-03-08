@@ -429,3 +429,77 @@ Resources:
       - {IpProtocol: tcp, FromPort: 9000, ToPort: 9000, SourceSecurityGroupId: {Ref: MessageWorkerELBSecurityGroup} }
       - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 77.91.248.0/21 }
 
+  MessageDeliveryELBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: frontend-notifications-message-delivery
+      VpcId: {Ref: FrontendNotificationsVPC}
+      SecurityGroupIngress:
+      - {IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0}
+      - {IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0}
+
+  MessageDeliveryELB:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      SecurityGroups:
+      - {Ref: MessageDeliveryELBSecurityGroup}
+      Subnets:
+        - {Ref: FrontendNotificationsSubnetOne}
+        - {Ref: FrontendNotificationsSubnetTwo}
+        - {Ref: FrontendNotificationsSubnetThree}
+      Scheme: internet-facing
+      Listeners:
+      - {LoadBalancerPort: 80, InstancePort: 9000, Protocol: HTTP}
+      HealthCheck:
+        Target: 'HTTP:9000/_healthcheck'
+        HealthyThreshold: 2
+        UnhealthyThreshold: 2
+        Interval: 10
+        Timeout: 5
+
+  MessageDeliveryASG:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AvailabilityZones: {'Fn::GetAZs': ''}
+      VPCZoneIdentifier:
+        - {Ref: FrontendNotificationsSubnetOne}
+        - {Ref: FrontendNotificationsSubnetTwo}
+        - {Ref: FrontendNotificationsSubnetThree}
+      LaunchConfigurationName: {Ref: MessageDeliveryLaunchConfig}
+      MinSize: 1
+      MaxSize: 2
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 300
+      LoadBalancerNames:
+      - {Ref: MessageDeliveryELB}
+      Tags:
+      - {Key: Stage, Value: CODE, PropagateAtLaunch: true}
+      - {Key: Stack, Value: frontend, PropagateAtLaunch: true}
+      - {Key: App, Value: message-delivery, PropagateAtLaunch: true}
+      - {Key: Management, Value: port=9000, PropagateAtLaunch: true}
+
+  MessageDeliveryLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: {Ref: InstanceImageId}
+      SecurityGroups:
+      - {Ref: MessageDeliverySecurityGroup}
+      InstanceType: t2.medium
+      IamInstanceProfile: {Ref: InstanceProfile}
+      AssociatePublicIpAddress: true
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash -ev
+          aws s3 cp s3://aws-frontend-artifacts/frontend/CODE/capi-event-worker/frontend-notifications.properties /etc/gu/frontend-notifications.properties
+          /opt/features/ssh-keys/initialise-keys-and-cron-job.sh -l -b github-team-keys -t Guardian-Frontend
+          /opt/features/native-packager/install.sh -b aws-frontend-artifacts -s -t tgz
+
+  MessageDeliverySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Frontend notifications CAPI event worker
+      VpcId: {Ref: FrontendNotificationsVPC}
+      SecurityGroupIngress:
+      - {IpProtocol: tcp, FromPort: 9000, ToPort: 9000, SourceSecurityGroupId: {Ref: MessageDeliveryELBSecurityGroup} }
+      - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 77.91.248.0/21 }
+
