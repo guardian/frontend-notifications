@@ -26,6 +26,10 @@ Parameters:
   InstanceImageId:
     Description: The id of the instance image
     Type: String
+  InboundInstanceSSHAllowedCidr:
+    Description: The CIDR allowed to access the instances via SSH
+    Type: String
+    Default: "77.91.248.0/21"
 
 Resources:
   GCMWorkerQueue:
@@ -351,7 +355,7 @@ Resources:
       VpcId: {Ref: FrontendNotificationsVPC}
       SecurityGroupIngress:
       - {IpProtocol: tcp, FromPort: 9000, ToPort: 9000, SourceSecurityGroupId: {Ref: CAPIEventWorkerELBSecurityGroup} }
-      - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 77.91.248.0/21 }
+      - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: {Ref: InboundInstanceSSHAllowedCidr} }
 
 
   # Message Worker
@@ -427,7 +431,7 @@ Resources:
       VpcId: {Ref: FrontendNotificationsVPC}
       SecurityGroupIngress:
       - {IpProtocol: tcp, FromPort: 9000, ToPort: 9000, SourceSecurityGroupId: {Ref: MessageWorkerELBSecurityGroup} }
-      - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 77.91.248.0/21 }
+      - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: {Ref: InboundInstanceSSHAllowedCidr} }
 
   MessageDeliveryELBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -501,5 +505,5 @@ Resources:
       VpcId: {Ref: FrontendNotificationsVPC}
       SecurityGroupIngress:
       - {IpProtocol: tcp, FromPort: 9000, ToPort: 9000, SourceSecurityGroupId: {Ref: MessageDeliveryELBSecurityGroup} }
-      - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: 77.91.248.0/21 }
+      - {IpProtocol: tcp, FromPort: 22, ToPort: 22, CidrIp: {Ref: InboundInstanceSSHAllowedCidr}}
 
