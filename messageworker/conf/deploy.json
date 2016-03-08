@@ -1,0 +1,27 @@
+{
+  "defaultStacks":[ "frontend" ],
+  "packages":{
+    "message-worker":{
+      "type":"autoscaling",
+      "data": {
+        "secondsToWait": 900,
+        "port": 9000,
+        "healthcheckGrace": 20,
+        "bucket": "aws-frontend-artifacts",
+        "healthcheck_paths": ["/_healthcheck"]
+      }
+    }
+  },
+  "recipes":{
+    "default":{
+      "actionsBeforeApp": ["message-worker.uploadArtifacts", "message-worker.deploy"]
+    },
+    "deployOnly": {
+      "actionsBeforeApp": ["message-worker.deploy"]
+    },
+    "artifactUploadOnly": {
+      "actionsBeforeApp": ["message-worker.uploadArtifacts"]
+    }
+  }
+}
+
