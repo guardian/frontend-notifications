@@ -1,3 +1,6 @@
 GET / controllers.MessageDeliveryController.index()
 
+GET /messages/:browserId controllers.MessageDeliveryController.getMessage(browserId)
+POST /messages/create controllers.MessageDeliveryController.saveRedisMessage()
+
 GET /_healthcheck controllers.Healthcheck.healthcheck()
