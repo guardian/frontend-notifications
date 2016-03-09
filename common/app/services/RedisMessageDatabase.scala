@@ -47,7 +47,7 @@ class RedisMessageDatabaseModule @Inject()(
 
   applicationLifecycle.addStopHook{ () =>
     log.info("Shutting down redis message database actor system")
-    Future.successful(redisMessageDatabase.akkaSystem.shutdown())
+    Future.successful(redisMessageDatabase.akkaSystem.terminate())
   }
 }
 
