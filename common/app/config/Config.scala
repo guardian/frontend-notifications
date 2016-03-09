@@ -22,6 +22,8 @@ class Config @Inject()(config: play.Configuration) {
   val firehoseRole: String = getMandatoryProperty("firehoseRole")
   val firehoseStreamName: String = getMandatoryProperty("firehoseStreamName")
 
+  val firehoseStreamLeaseTableName: String = getMandatoryProperty("firehoseStreamLeaseTableName")
+
   val messageWorkerQueue: String = getMandatoryProperty("messageWorkerQueue")
 
   val redisMessageCacheHost: String = getMandatoryProperty("redisMessageCacheHost")

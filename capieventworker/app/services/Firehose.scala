@@ -28,10 +28,8 @@ class Firehose @Inject() (config: Config, messageWorker: MessageWorker) {
       config.firehoseRole,
       stsRoleSessionName)
 
-  val frontendNotifications: String = "capi-firehose-notifications"
-
   val kinesisClientLibConfiguration = new KinesisClientLibConfiguration(
-    frontendNotifications,
+    config.firehoseStreamLeaseTableName,
     config.firehoseStreamName,
     firehoseCredentials,
     localCredentials,
