@@ -21,7 +21,10 @@ lazy val common = (project in file("./common"))
       "joda-time" % "joda-time" % "2.9.2",
       "com.amazonaws" % "aws-java-sdk" % "1.10.20",
       "com.google.gcm" % "gcm-server" % "1.0.0",
-      "com.github.etaty" %% "rediscala" % "1.6.0"
+      "com.github.etaty" %% "rediscala" % "1.6.0",
+      "org.julienrf" % "play-json-derived-codecs_2.11" % "3.1",
+      "com.gu" %% "content-api-client" % "7.24",
+      "org.scalatest" %% "scalatest" % "2.2.6" % "test"
     )
   )
   .enablePlugins(PlayScala)
@@ -35,8 +38,7 @@ lazy val capiEventWorker = (project in file("./capieventworker"))
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
       "com.amazonaws" % "aws-java-sdk" % "1.10.20",
-      "com.amazonaws" % "amazon-kinesis-client" % "1.6.1",
-      "com.gu" %% "content-api-client" % "7.24"
+      "com.amazonaws" % "amazon-kinesis-client" % "1.6.1"
     ),
     routesGenerator := InjectedRoutesGenerator,
     packageName in Universal := normalizedName.value,
