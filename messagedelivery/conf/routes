@@ -1,5 +1,6 @@
 GET / controllers.MessageDeliveryController.index()
 
+OPTIONS /messages/:browserId controllers.MessageDeliveryController.getMessageOptions(browserId)
 GET /messages/:browserId controllers.MessageDeliveryController.getMessage(browserId)
 POST /messages/create controllers.MessageDeliveryController.saveRedisMessage()
 

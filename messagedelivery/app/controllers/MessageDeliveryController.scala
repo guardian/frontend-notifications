@@ -6,7 +6,7 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.json.{JsArray, JsObject, JsString, Json}
 import play.api.mvc.{Action, Controller}
-import services.{Logging, RedisMessageDatabase}
+import services.{RedisMessage, Logging, RedisMessageDatabase}
 import workers.GCMMessage
 
 import scala.concurrent.Future
@@ -28,6 +28,21 @@ class MessageDeliveryController @Inject()(redis: RedisMessageDatabase) extends C
     Ok("Index OK from Message Delivery")
   }
 
+  def messages() : List[RedisMessage] = {
+    List(RedisMessage("topic","title","body",2L))
+  }
+
+  val headerValues = Seq("Access-Control-Allow-Origin" -> "*",
+    "Access-Control-Allow-Headers" -> "Accept, Content-Type, Origin, Authorization",
+    "Access-Control-Allow-Credentials" -> "true",
+    "Access-Control-Allow-Max-Age" -> "3600",
+    "Access-Control-Allow-Methods" -> "GET, POST"
+  )
+
+  def getMessageOptions(gcmBrowserId: String) = Action { implicit request =>
+      NoContent.withHeaders(headerValues:_*)
+  }
+
   def getMessage(gcmBrowserId: String) = Action.async { implicit request =>
     redis.getMessages(gcmBrowserId).map {
       case Nil =>
@@ -36,7 +51,7 @@ class MessageDeliveryController @Inject()(redis: RedisMessageDatabase) extends C
       case messages =>
         Ok(JsObject(
           Seq("status" -> JsString("ok"),
-              "messages" -> JsArray(messages.map{ message => Json.toJson(message)}))))}}
+              "messages" -> JsArray(messages.map{ message => Json.toJson(message)})))).withHeaders(headerValues:_*)}}
 
   def saveRedisMessage() = Action.async { implicit request =>
     gcmMessageForm.bindFromRequest.fold(
