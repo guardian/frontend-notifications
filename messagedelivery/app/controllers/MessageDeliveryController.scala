@@ -28,10 +28,6 @@ class MessageDeliveryController @Inject()(redis: RedisMessageDatabase) extends C
     Ok("Index OK from Message Delivery")
   }
 
-  def messages() : List[RedisMessage] = {
-    List(RedisMessage("topic","title","body",2L))
-  }
-
   val headerValues = Seq("Access-Control-Allow-Origin" -> "*",
     "Access-Control-Allow-Headers" -> "Accept, Content-Type, Origin, Authorization",
     "Access-Control-Allow-Credentials" -> "true",
