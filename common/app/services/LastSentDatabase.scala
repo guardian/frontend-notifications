@@ -77,35 +77,3 @@ object LastSent {
     }
   }
 }
-
-@Singleton
-class LastSentDatabase @Inject()(config: Config) extends Logging {
-
-  sealed trait ShouldSendResult
-  case object ShouldSend extends ShouldSendResult
-  case object ShouldNotSend extends ShouldSendResult
-
-  val dynamoClient: AmazonDynamoDBAsyncClient = new AmazonDynamoDBAsyncClient().withRegion(Region.getRegion(Regions.EU_WEST_1))
-  val lockingUpdate: DynamoLockingUpdateTable[LastSent] = new DynamoLockingUpdateTable[LastSent](
-    dynamoClient,
-    config.LastSentTableName,
-    "topicId",
-    "dataKey")
-
-  def emptyForTopic(topic: String): LastSent = LastSent(topic, DateTime.now())
-
-  def updateTopic(topic: String): Future[ShouldSendResult] = {
-    val update = lockingUpdate.lockingReadAndWriteWithCondition(topic, emptyForTopic(topic)){
-      case LastSent(t, dateTime) =>
-        if (DateTime.now.minusMinutes(2).isAfter(dateTime))
-          Option(LastSent(t, DateTime.now))
-        else
-          None}
-
-    update.map {
-      case lockingUpdate.ReadAndWrite(old, _) =>
-        log.info(s"Sending to $topic; (Last sent: $old)")
-        ShouldSend
-      case _ => ShouldNotSend}
-  }
-}
