@@ -5,16 +5,11 @@ import javax.inject.{Inject, Singleton}
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import config.Config
-import play.api.libs.json.Json
+import model.{KeyEvent, PublishedMessage, LiveBlogUpdateEvent, Update}
+import org.joda.time.DateTime
 import services._
 
 import scala.concurrent.Future
-
-object PublishedMessage {
-  implicit val implicitFormat = Json.format[PublishedMessage]
-}
-
-case class PublishedMessage(topic: String) extends AnyVal
 
 @Singleton
 class MessageWorker @Inject() (
@@ -22,34 +17,74 @@ class MessageWorker @Inject() (
   gcmWorker: GCMWorker,
   redisMessageDatabaseModule: RedisMessageDatabaseModule,
   clientDatabase: ClientDatabase,
-  lastSentDatabase: LastSentDatabase) extends JsonQueueWorker[PublishedMessage] with Logging {
+  lastSentDatabase: LastSentDatabase) extends JsonQueueWorker[Update] with Logging {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val redisMessageDatabase: RedisMessageDatabase = redisMessageDatabaseModule.redisMessageDatabase
 
-  override val queue: JsonMessageQueue[PublishedMessage] =
-    JsonMessageQueue[PublishedMessage](
+  override val queue: JsonMessageQueue[Update] =
+    JsonMessageQueue[Update](
       new AmazonSQSAsyncClient(
         new DefaultAWSCredentialsProviderChain()).withRegion(config.workerQueueRegion),
       config.messageWorkerQueue)
 
-  override def process(message: SQSMessage[PublishedMessage]): Future[Unit] = {
-    val PublishedMessage(topic: String) = message.get
-
-    log.info(s"Processing job for topic $topic")
-
+  override def process(message: SQSMessage[Update]): Future[Unit] = {
     ServerStatistics.recordsProcessed.incrementAndGet()
+    message.get match {
+      case PublishedMessage(topic: String) =>
+        log.info(s"Processing job for PublishedMessage($topic)")
 
-    lastSentDatabase.updateTopic(topic).flatMap {
-      case lastSentDatabase.ShouldNotSend => Future.successful(())
-      case lastSentDatabase.ShouldSend =>
-        clientDatabase.getIdsByTopic(topic).map { listOfBrowserIds =>
-          listOfBrowserIds.foreach { browserId =>
-            val gcmMessage: GCMMessage = GCMMessage(browserId.get, topic, s"Message for $topic", s"You got a new notification for $topic")
-            redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
-              ServerStatistics.gcmMessagesSent.incrementAndGet()
-              gcmWorker.queue.send(List(gcmMessage))}}}
-    }
+        lastSentDatabase.checkTopicAndUpdateIfPasses(topic, LastSentDateOnly.emptyForTopic(topic)){
+          case LastSentDateOnly(t, dateTime)
+            if DateTime.now.minusMinutes(2).isAfter(dateTime) => Option(LastSentDateOnly(t, DateTime.now))
+          case _ => None
+        }{
+          case LastSentDateOnly(t, dateTime) =>
+            clientDatabase.getIdsByTopic(t).map { listOfBrowserIds =>
+              listOfBrowserIds.foreach { browserId =>
+                val gcmMessage: GCMMessage = GCMMessage(browserId.get, t, s"Message for $t", s"You got a new notification for $t")
+                redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
+                  ServerStatistics.gcmMessagesSent.incrementAndGet()
+                  gcmWorker.queue.send(List(gcmMessage))}}}
 
+            case _ => Future.successful(())}
+
+      case LiveBlogUpdateEvent(topic, keyEvents) =>
+        log.info(s"Processing job for LiveBlogUpdateEvent($topic)(${keyEvents.length} key events)")
+
+        lazy val emptyLastSentKeyEvent: LastSentKeyEvent = LastSentKeyEvent(topic, DateTime.now(), keyEvents.lastOption.map(_.id))
+
+        lastSentDatabase.lockingUpdate.lockingReadAndWriteWithCondition(id=topic, empty=emptyLastSentKeyEvent){
+          case ke@LastSentKeyEvent(t, dateTime, Some(lastKeyEventId)) =>
+            log.info(s"Last sent to $topic at $dateTime with lastKeyEventId: $lastKeyEventId")
+            KeyEvent.getLastestKeyEvents(lastKeyEventId, keyEvents).lastOption.map(lastKeyEvent => LastSentKeyEvent(t, DateTime.now(), Option(lastKeyEvent.id)))
+          case ke@LastSentKeyEvent(t, dateTime, None) =>
+            log.info(s"Never sent to topic $topic before")
+            keyEvents.lastOption.map(keyEvent => LastSentKeyEvent(t, DateTime.now(), Some(keyEvent.id)))
+          case t =>
+            log.warn(s"Got the wrong type for $topic: $t")
+            None}
+        .map {
+          case lastSentDatabase.lockingUpdate.ReadAndWrite(LastSentKeyEvent(t, _, Some(lastKeyEventId)), newItem) =>
+            val newKeyEvents: List[KeyEvent] = KeyEvent.getLastestKeyEvents(lastKeyEventId, keyEvents)
+            log.info(s"Sending ${newKeyEvents.length} new events to $topic (Out of ${keyEvents.length} possible events)")
+            sendKeyEvents(t, newKeyEvents)
+          case lastSentDatabase.lockingUpdate.NewItem(LastSentKeyEvent(t, _, _)) =>
+            log.info(s"Never seen $t before; sending all ${keyEvents.length} key events")
+            sendKeyEvents(t, keyEvents)
+          case t =>
+            log.warn(s"Did not sent any events for $topic: DB Result: $t")}}
   }
+
+  private def sendKeyEvents(topic: String, keyEvents: List[KeyEvent]): Future[Unit] =
+    clientDatabase.getIdsByTopic(topic).map { listOfBrowserIds =>
+      log.info(s"There are ${listOfBrowserIds.size} browers to notify for $topic")
+      listOfBrowserIds.foreach { browserId =>
+        keyEvents.map { keyEvent =>
+          val topicMessage: String = keyEvent.title.getOrElse(s"Message for $topic")
+          val gcmMessage: GCMMessage = GCMMessage(browserId.get, topic, topicMessage, keyEvent.body)
+          redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
+            ServerStatistics.gcmMessagesSent.incrementAndGet()
+            gcmWorker.queue.send(List(gcmMessage))}}}}
+
 }
