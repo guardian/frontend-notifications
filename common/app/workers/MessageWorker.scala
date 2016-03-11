@@ -3,8 +3,11 @@ package workers
 import javax.inject.{Inject, Singleton}
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
+import com.amazonaws.regions.{Regions, Region}
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import config.Config
+import helper.DynamoLockingUpdateTable
 import model.{KeyEvent, PublishedMessage, LiveBlogUpdateEvent, Update}
 import org.joda.time.DateTime
 import services._
@@ -33,21 +36,7 @@ class MessageWorker @Inject() (
     message.get match {
       case PublishedMessage(topic: String) =>
         log.info(s"Processing job for PublishedMessage($topic)")
-
-        lastSentDatabase.checkTopicAndUpdateIfPasses(topic, LastSentDateOnly.emptyForTopic(topic)){
-          case LastSentDateOnly(t, dateTime)
-            if DateTime.now.minusMinutes(2).isAfter(dateTime) => Option(LastSentDateOnly(t, DateTime.now))
-          case _ => None
-        }{
-          case LastSentDateOnly(t, dateTime) =>
-            clientDatabase.getIdsByTopic(t).map { listOfBrowserIds =>
-              listOfBrowserIds.foreach { browserId =>
-                val gcmMessage: GCMMessage = GCMMessage(browserId.get, t, s"Message for $t", s"You got a new notification for $t")
-                redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
-                  ServerStatistics.gcmMessagesSent.incrementAndGet()
-                  gcmWorker.queue.send(List(gcmMessage))}}}
-
-            case _ => Future.successful(())}
+        Future.successful(())
 
       case LiveBlogUpdateEvent(topic, keyEvents) =>
         log.info(s"Processing job for LiveBlogUpdateEvent($topic)(${keyEvents.length} key events)")
