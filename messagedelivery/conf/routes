@@ -5,3 +5,5 @@ GET /messages/:browserId controllers.MessageDeliveryController.getMessage(browse
 POST /messages/create controllers.MessageDeliveryController.saveRedisMessage()
 
 GET /_healthcheck controllers.Healthcheck.healthcheck()
+
+GET /.well-known/acme-challenge/08eY7chzUEwYgXz6ZPPzRF4qcJ_lK-0pCrCkWX5eF0M controllers.MessageDeliveryController.acmeChallenge()
