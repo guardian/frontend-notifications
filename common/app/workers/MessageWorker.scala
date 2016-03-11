@@ -19,9 +19,15 @@ class MessageWorker @Inject() (
   config: Config,
   gcmWorker: GCMWorker,
   redisMessageDatabaseModule: RedisMessageDatabaseModule,
-  clientDatabase: ClientDatabase,
-  lastSentDatabase: LastSentDatabase) extends JsonQueueWorker[Update] with Logging {
+  clientDatabase: ClientDatabase) extends JsonQueueWorker[Update] with Logging {
   import scala.concurrent.ExecutionContext.Implicits.global
+
+  val dynamoClient: AmazonDynamoDBAsyncClient = new AmazonDynamoDBAsyncClient().withRegion(Region.getRegion(Regions.EU_WEST_1))
+  val lockingUpdate: DynamoLockingUpdateTable[LastSent] = new DynamoLockingUpdateTable[LastSent](
+    dynamoClient,
+    config.LastSentTableName,
+    "topicId",
+    "dataKey")
 
   val redisMessageDatabase: RedisMessageDatabase = redisMessageDatabaseModule.redisMessageDatabase
 
@@ -43,7 +49,7 @@ class MessageWorker @Inject() (
 
         lazy val emptyLastSentKeyEvent: LastSentKeyEvent = LastSentKeyEvent(topic, DateTime.now(), keyEvents.lastOption.map(_.id))
 
-        lastSentDatabase.lockingUpdate.lockingReadAndWriteWithCondition(id=topic, empty=emptyLastSentKeyEvent){
+        lockingUpdate.lockingReadAndWriteWithCondition(id=topic, empty=emptyLastSentKeyEvent){
           case ke@LastSentKeyEvent(t, dateTime, Some(lastKeyEventId)) =>
             log.info(s"Last sent to $topic at $dateTime with lastKeyEventId: $lastKeyEventId")
             KeyEvent.getLastestKeyEvents(lastKeyEventId, keyEvents).lastOption.map(lastKeyEvent => LastSentKeyEvent(t, DateTime.now(), Option(lastKeyEvent.id)))
@@ -54,11 +60,11 @@ class MessageWorker @Inject() (
             log.warn(s"Got the wrong type for $topic: $t")
             None}
         .map {
-          case lastSentDatabase.lockingUpdate.ReadAndWrite(LastSentKeyEvent(t, _, Some(lastKeyEventId)), newItem) =>
+          case lockingUpdate.ReadAndWrite(LastSentKeyEvent(t, _, Some(lastKeyEventId)), newItem) =>
             val newKeyEvents: List[KeyEvent] = KeyEvent.getLastestKeyEvents(lastKeyEventId, keyEvents)
             log.info(s"Sending ${newKeyEvents.length} new events to $topic (Out of ${keyEvents.length} possible events)")
             sendKeyEvents(t, newKeyEvents)
-          case lastSentDatabase.lockingUpdate.NewItem(LastSentKeyEvent(t, _, _)) =>
+          case lockingUpdate.NewItem(LastSentKeyEvent(t, _, _)) =>
             log.info(s"Never seen $t before; sending all ${keyEvents.length} key events")
             sendKeyEvents(t, keyEvents)
           case t =>
