@@ -26,6 +26,9 @@ Parameters:
   InstanceImageId:
     Description: The id of the instance image
     Type: String
+  GuWebSSLCertificateID:
+    Description: GU Web SSL Certificate ID
+    Type: String
   InboundInstanceSSHAllowedCidr:
     Description: The CIDR allowed to access the instances via SSH
     Type: String
@@ -453,7 +456,7 @@ Resources:
         - {Ref: FrontendNotificationsSubnetThree}
       Scheme: internet-facing
       Listeners:
-      - {LoadBalancerPort: 80, InstancePort: 9000, Protocol: HTTP}
+      - {LoadBalancerPort: 443, InstancePort: 9000, Protocol: HTTPS, SSLCertificateId: {Ref: GuWebSSLCertificateID}}
       HealthCheck:
         Target: 'HTTP:9000/_healthcheck'
         HealthyThreshold: 2
