@@ -11,7 +11,8 @@ import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason
 import com.amazonaws.services.kinesis.metrics.impl.NullMetricsFactory
 import com.amazonaws.services.kinesis.model.Record
 import config.Config
-import workers.{MessageWorker, PublishedMessage}
+import model.{KeyEvent, LiveBlogUpdateEvent}
+import workers.MessageWorker
 
 import scala.collection.JavaConverters._
 import scala.util.{Failure, Success}
@@ -75,7 +76,7 @@ class RecordProcessor(messageWorker: MessageWorker) extends IRecordProcessor wit
           if (tags.exists(_ == "tone/minutebyminute")) {
             ServerStatistics.capiEventsProcessed.incrementAndGet()
             log.info(s"Putting ${content._4.id} onto queue!")
-            messageWorker.queue.send(PublishedMessage(content._4.id))}
+            messageWorker.queue.send(LiveBlogUpdateEvent(content._4.id, KeyEvent.fromContent(content.content)))}
         case Failure(t) =>
           log.error(s"Could not deserialize message: $t")
       }
