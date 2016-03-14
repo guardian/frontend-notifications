@@ -23,20 +23,29 @@ class ClientDatabase @Inject()(
   val TableName: String = config.ClientDatabaseTableName
 
   def getIdsByTopic(topic: String): Future[List[BrowserId]] = {
-    val queryRequest =
-      new QueryRequest()
-        .withTableName(TableName)
-        .withLimit(1000)
-        .withKeyConditionExpression(s"notificationTopicId = :topic")
-        .withExpressionAttributeValues(
-          Map(":topic" -> new AttributeValue().withS(topic)).asJava)
+
+    def getQueryRequest(maybeLastEvaluatedKey: Option[java.util.Map[String, AttributeValue]], results: List[BrowserId]): Future[List[BrowserId]] = {
+      val queryRequest: QueryRequest =
+        new QueryRequest()
+          .withTableName(TableName)
+          .withLimit(1000)
+          .withKeyConditionExpression(s"notificationTopicId = :topic")
+          .withExpressionAttributeValues(
+            Map(":topic" -> new AttributeValue().withS(topic)).asJava)
+
+      val finalQueryRequest: QueryRequest = maybeLastEvaluatedKey
+        .fold(queryRequest)(lastEvaluatedKey => queryRequest.withExclusiveStartKey(lastEvaluatedKey))
+
+      dynamoDBClient.queryFuture(finalQueryRequest).flatMap { queryResult =>
+        val newResults = results ::: queryResult.getItems.asScala.flatMap { item =>
+          item.asScala.get("gcmBrowserId").map(_.getS).map(BrowserId)
+        }.toList
+
+        Option(queryResult.getLastEvaluatedKey) match {
+          case Some(lastEvaluatedKey) if !queryResult.getLastEvaluatedKey.isEmpty => getQueryRequest(Option(lastEvaluatedKey), newResults)
+          case None => Future.successful(newResults)}}}
 
 
-    dynamoDBClient.queryFuture(queryRequest).map { queryResult =>
-      queryResult.getItems.asScala.flatMap { item =>
-        item.asScala.get("gcmBrowserId").map(_.getS).map(BrowserId)
-      }.toList
+      getQueryRequest(None, Nil)
     }
-  }
-
 }
