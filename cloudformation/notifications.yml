@@ -329,7 +329,7 @@ Resources:
       LoadBalancerNames:
       - {Ref: CAPIEventWorkerELB}
       Tags:
-      - {Key: Stage, Value: CODE, PropagateAtLaunch: true}
+      - {Key: Stage, Value: PROD, PropagateAtLaunch: true}
       - {Key: Stack, Value: frontend, PropagateAtLaunch: true}
       - {Key: App, Value: capi-event-worker, PropagateAtLaunch: true}
       - {Key: Management, Value: port=9000, PropagateAtLaunch: true}
@@ -347,7 +347,7 @@ Resources:
       UserData:
         Fn::Base64: |
           #!/bin/bash -ev
-          aws s3 cp s3://aws-frontend-artifacts/frontend/CODE/capi-event-worker/frontend-notifications.properties /etc/gu/frontend-notifications.properties
+          aws s3 cp s3://aws-frontend-artifacts/frontend/PROD/capi-event-worker/frontend-notifications.properties /etc/gu/frontend-notifications.properties
           /opt/features/ssh-keys/initialise-keys-and-cron-job.sh -l -b github-team-keys -t Guardian-Frontend
           /opt/features/native-packager/install.sh -b aws-frontend-artifacts -s -t tgz
 
@@ -406,7 +406,7 @@ Resources:
       LoadBalancerNames:
       - {Ref: MessageWorkerELB}
       Tags:
-      - {Key: Stage, Value: CODE, PropagateAtLaunch: true}
+      - {Key: Stage, Value: PROD, PropagateAtLaunch: true}
       - {Key: Stack, Value: frontend, PropagateAtLaunch: true}
       - {Key: App, Value: message-worker, PropagateAtLaunch: true}
       - {Key: Management, Value: port=9000, PropagateAtLaunch: true}
@@ -423,7 +423,7 @@ Resources:
       UserData:
         Fn::Base64: |
           #!/bin/bash -ev
-          aws s3 cp s3://aws-frontend-artifacts/frontend/CODE/capi-event-worker/frontend-notifications.properties /etc/gu/frontend-notifications.properties
+          aws s3 cp s3://aws-frontend-artifacts/frontend/PROD/capi-event-worker/frontend-notifications.properties /etc/gu/frontend-notifications.properties
           /opt/features/ssh-keys/initialise-keys-and-cron-job.sh -l -b github-team-keys -t Guardian-Frontend
           /opt/features/native-packager/install.sh -b aws-frontend-artifacts -s -t tgz
 
@@ -480,7 +480,7 @@ Resources:
       LoadBalancerNames:
       - {Ref: MessageDeliveryELB}
       Tags:
-      - {Key: Stage, Value: CODE, PropagateAtLaunch: true}
+      - {Key: Stage, Value: PROD, PropagateAtLaunch: true}
       - {Key: Stack, Value: frontend, PropagateAtLaunch: true}
       - {Key: App, Value: message-delivery, PropagateAtLaunch: true}
       - {Key: Management, Value: port=9000, PropagateAtLaunch: true}
@@ -497,7 +497,7 @@ Resources:
       UserData:
         Fn::Base64: |
           #!/bin/bash -ev
-          aws s3 cp s3://aws-frontend-artifacts/frontend/CODE/capi-event-worker/frontend-notifications.properties /etc/gu/frontend-notifications.properties
+          aws s3 cp s3://aws-frontend-artifacts/frontend/PROD/capi-event-worker/frontend-notifications.properties /etc/gu/frontend-notifications.properties
           /opt/features/ssh-keys/initialise-keys-and-cron-job.sh -l -b github-team-keys -t Guardian-Frontend
           /opt/features/native-packager/install.sh -b aws-frontend-artifacts -s -t tgz
 
