@@ -26,7 +26,7 @@ class DynamoLockingUpdateTable[T](
 
   sealed trait UpdateResult
   case class NewItem(get: T) extends UpdateResult
-  case class ReadOnly(get: T) extends UpdateResult
+  case class ConditionFailed(old: T) extends UpdateResult
   case class ReadAndWrite(old: T, newItem: T) extends UpdateResult
   object FailedConditionOnWrite extends UpdateResult
 
@@ -77,7 +77,7 @@ class DynamoLockingUpdateTable[T](
               .map(_ => ReadAndWrite(value, v))
               .recover{ case conditionFailedException: ConditionalCheckFailedException =>
                 FailedConditionOnWrite}
-          case None => Future.successful(ReadOnly(value))
+          case None => Future.successful(ConditionFailed(value))
         }
       case None => newItem(id, empty).map(Function.const(NewItem(empty)))
     }
