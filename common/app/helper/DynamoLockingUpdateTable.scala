@@ -67,21 +67,6 @@ class DynamoLockingUpdateTable[T](
             primaryKeyName -> new AttributeValue().withS(id),
             dataKeyName -> dynamoFormat.write(a)).asJava))
 
-  def lockingReadAndWriteWithUpdate(id: String)(updateFunction: T => T)(empty: T): Future[UpdateResult] = {
-    consistentFormatRead(id).flatMap {
-      case Some(value) =>
-        val newValue: T = updateFunction(value)
-        conditionalWrite(id, value, newValue)
-          .map(Function.const(ReadAndWrite(value, newValue)))
-          .recover{ case conditionFailedException: ConditionalCheckFailedException =>
-            FailedConditionOnWrite}
-      case None =>
-        newItem(id, empty)
-          .map(Function.const(NewItem(empty)))}}
-
-  def lockingReadAndWriteIgnore(id: String, item: T): Future[UpdateResult] =
-    lockingReadAndWriteWithUpdate(id)(Function.const(item))(item)
-
   def lockingReadAndWriteWithCondition(id: String, empty: T)
       (updateFunction: T => Option[T]): Future[UpdateResult] =
     consistentFormatRead(id).flatMap {
@@ -96,4 +81,10 @@ class DynamoLockingUpdateTable[T](
         }
       case None => newItem(id, empty).map(Function.const(NewItem(empty)))
     }
+
+  def lockingReadAndWriteWithUpdate(id: String, empty: T)(updateFunction: T => T): Future[UpdateResult] =
+    lockingReadAndWriteWithCondition(id, empty)(t => Option(updateFunction(t)))
+
+  def lockingReadAndWriteIgnore(id: String, item: T): Future[UpdateResult] =
+    lockingReadAndWriteWithUpdate(id, item)(Function.const(item))
 }
