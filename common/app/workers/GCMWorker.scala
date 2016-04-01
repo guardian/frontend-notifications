@@ -16,7 +16,7 @@ object GCMMessage {
   implicit val implicitFormat = Json.format[GCMMessage]
 }
 
-case class GCMMessage(clientId: String, topic: String, title: String, body: String)
+case class GCMMessage(clientId: String, topic: String, title: String, body: String, blockId: String)
 
 @Singleton
 class GCMWorker @Inject()(

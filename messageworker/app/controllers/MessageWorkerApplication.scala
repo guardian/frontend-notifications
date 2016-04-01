@@ -48,7 +48,8 @@ class MessageWorkerApplication @Inject() (
       title <- requestMap.get("title").map(_.mkString)
       body <- requestMap.get("body").map(_.mkString)
       topicId <- requestMap.get("topicId").map(_.mkString)
-    } yield GCMMessage(browserId, topicId, title, body)
+      blockId <- requestMap.get("blockId").map(_.mkString)
+    } yield GCMMessage(browserId, topicId, title, body, blockId)
 
     maybeGCMMessage match {
       case None => Future.successful(InternalServerError(s"Invalid parameters for $requestMap"))

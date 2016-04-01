@@ -77,7 +77,8 @@ class MessageWorker @Inject() (
       listOfBrowserIds.foreach { browserId =>
         keyEvents.map { keyEvent =>
           val topicMessage: String = keyEvent.title.getOrElse(s"Message for $topic")
-          val gcmMessage: GCMMessage = GCMMessage(browserId.get, topic, topicMessage, keyEvent.body)
+          log.info(s"Message for $topic with Id: ${keyEvent.id}")
+          val gcmMessage: GCMMessage = GCMMessage(browserId.get, topic, topicMessage, keyEvent.body, keyEvent.id)
           redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
             ServerStatistics.gcmMessagesSent.incrementAndGet()
             gcmWorker.queue.send(List(gcmMessage))}}}}

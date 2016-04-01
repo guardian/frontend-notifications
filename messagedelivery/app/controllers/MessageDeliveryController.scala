@@ -21,7 +21,8 @@ class MessageDeliveryController @Inject()(redis: RedisMessageDatabase) extends C
       "clientId" -> nonEmptyText,
       "topic" -> nonEmptyText,
       "title" -> nonEmptyText,
-      "body" -> nonEmptyText
+      "body" -> nonEmptyText,
+      "blockId" -> nonEmptyText
     )(GCMMessage.apply)(GCMMessage.unapply))
 
   def index = Action {
