@@ -32,8 +32,9 @@ class MessageDatabase @Inject()(
                 Map(
                   "topic" -> new AttributeValue().withS(gcmMessage.topic),
                   "title" -> new AttributeValue().withS(gcmMessage.title),
-                  "body" -> new AttributeValue().withS(gcmMessage.body)
-                ).asJava))
+                  "body" -> new AttributeValue().withS(gcmMessage.body),
+                  "blockId" -> new AttributeValue().withS(gcmMessage.blockId)
+              ).asJava))
           ).asJava)
 
     dynamoDBClient.putItemFuture(putItemRequest)

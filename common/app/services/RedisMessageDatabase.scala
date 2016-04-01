@@ -19,7 +19,7 @@ import scala.util.{Failure, Success}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-case class RedisMessage(topic: String, title: String, body: String, time: Long)
+case class RedisMessage(topic: String, title: String, body: String, blockId: String, time: Long)
 
 object RedisMessage {
   implicit val redisMessageFormat = Json.format[RedisMessage]
@@ -35,7 +35,7 @@ object RedisMessage {
   }
 
   def fromGcmMessage(gcmMessage: GCMMessage): RedisMessage =
-    RedisMessage(gcmMessage.topic, gcmMessage.title, gcmMessage.body, DateTime.now.getMillis / 1000)
+    RedisMessage(gcmMessage.topic, gcmMessage.title, gcmMessage.body, gcmMessage.blockId, DateTime.now.getMillis / 1000)
 }
 
 @Singleton
