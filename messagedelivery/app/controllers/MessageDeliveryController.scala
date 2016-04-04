@@ -5,7 +5,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.json.{JsArray, JsObject, JsString, Json}
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.{Result, Action, Controller}
 import services.{RedisMessage, Logging, RedisMessageDatabase}
 import workers.GCMMessage
 
@@ -36,6 +36,8 @@ class MessageDeliveryController @Inject()(redis: RedisMessageDatabase) extends C
     "Access-Control-Allow-Methods" -> "GET, POST"
   )
 
+  private def withCors(response: Result) = response.withHeaders(headerValues:_*)
+
   def getMessageOptions(gcmBrowserId: String) = Action { implicit request =>
       NoContent.withHeaders(headerValues:_*)
   }
@@ -44,11 +46,12 @@ class MessageDeliveryController @Inject()(redis: RedisMessageDatabase) extends C
     redis.getMessages(gcmBrowserId).map {
       case Nil =>
         log.warn(s"Could not retrieve latest message for $gcmBrowserId")
-        NotFound(JsObject(Seq("status" -> JsString("not found"))))
+        withCors(NotFound(JsObject(Seq("status" -> JsString("not found")))))
       case messages =>
-        Ok(JsObject(
-          Seq("status" -> JsString("ok"),
-              "messages" -> JsArray(messages.map{ message => Json.toJson(message)})))).withHeaders(headerValues:_*)}}
+        withCors(
+          Ok(JsObject(
+            Seq("status" -> JsString("ok"),
+                "messages" -> JsArray(messages.map{ message => Json.toJson(message)})))))}}
 
   def saveRedisMessage() = Action.async { implicit request =>
     gcmMessageForm.bindFromRequest.fold(
