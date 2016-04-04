@@ -5,12 +5,12 @@ import javax.inject.{Inject, Singleton}
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.libs.json.{JsArray, JsObject, JsString, Json}
-import play.api.mvc.{Result, Action, Controller}
-import services.{RedisMessage, Logging, RedisMessageDatabase}
+import play.api.mvc.{Action, Controller, Result}
+import services.{Logging, RedisMessageDatabase}
 import workers.GCMMessage
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 
 @Singleton
