@@ -56,8 +56,4 @@ class MessageDeliveryController @Inject()(redis: RedisMessageDatabase) extends C
       gcmMessage =>
         redis.leaveMessageWithDefaultExpiry(gcmMessage).map(_ => Ok))}
 
-  def acmeChallenge() = Action {
-    Ok("08eY7chzUEwYgXz6ZPPzRF4qcJ_lK-0pCrCkWX5eF0M.IJbxXz31kpvuH8KkeakzDFx6mNFUDCDY9SNC38XNA50")
-  }
-
 }
