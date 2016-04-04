@@ -29,18 +29,16 @@ class MessageDeliveryController @Inject()(redis: RedisMessageDatabase) extends C
     Ok("Index OK from Message Delivery")
   }
 
-  val headerValues = Seq("Access-Control-Allow-Origin" -> "*",
+  val headerValues: Seq[(String, String)] = Seq("Access-Control-Allow-Origin" -> "*",
     "Access-Control-Allow-Headers" -> "Accept, Content-Type, Origin, Authorization",
     "Access-Control-Allow-Credentials" -> "true",
     "Access-Control-Allow-Max-Age" -> "3600",
-    "Access-Control-Allow-Methods" -> "GET, POST"
-  )
+    "Access-Control-Allow-Methods" -> "GET, POST")
 
-  private def withCors(response: Result) = response.withHeaders(headerValues:_*)
+  private def withCors(response: Result): Result = response.withHeaders(headerValues:_*)
 
   def getMessageOptions(gcmBrowserId: String) = Action { implicit request =>
-      NoContent.withHeaders(headerValues:_*)
-  }
+      NoContent.withHeaders(headerValues:_*)}
 
   def getMessage(gcmBrowserId: String) = Action.async { implicit request =>
     redis.getMessages(gcmBrowserId).map {
