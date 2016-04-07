@@ -58,7 +58,7 @@ class RedisMessageDatabase @Inject()(
 
   implicit lazy val akkaSystem: ActorSystem = akka.actor.ActorSystem()
   lazy val redis: RedisClient = RedisClient(host=config.redisMessageCacheHost, port=config.redisMessageCachePort)
-  val defaultExpiryInSeconds: Int = 5.minutes.toSeconds.toInt
+  val defaultExpiryInSeconds: Int = 12.hours.toSeconds.toInt
 
   def pingRedis: Future[String] = redis.ping()
 
