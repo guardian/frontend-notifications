@@ -6,22 +6,37 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.6/js/materialize.min.js"></script>
     </head>
     <body>
-        <form method="POST" action="/send" enctype="application/x-www-form-urlencoded">
-            <fieldset>
-                <label for="browserId">BrowserId:</label>
-                <input id="browserId" name="browserId" type="text">
+        <div class="container">
 
-                <label for="topicId">Topic:</label>
-                <input id="topicId" name="topicId" type="text">
+            <div class="col s6">
+                <header>
+                    <h4>Send an alert</h4>
+                </header>
+            </div>
 
-                <label for="title">Title:</label>
-                <input id="title" name="title" type="text">
+            <div class="col s12">
+                <form method="POST" action="/send" enctype="application/x-www-form-urlencoded">
+                    <fieldset>
+                        <label for="browserId">BrowserId:</label>
+                        <input id="browserId" name="browserId" type="text"/>
 
-                <label for="body">Body:</label>
-                <input id="body" name="body" type="text">
+                        <label for="topicId">Topic:</label>
+                        <input id="topicId" name="topicId" type="text"/>
 
-                <input type="submit" value="submit">
-            </fieldset>
-        </form>
+                        <label for="title">Title:</label>
+                        <input id="title" name="title" type="text"/>
+
+                        <label for="body">Body:</label>
+                        <textarea id="body" name="body" class="materialize-textarea"></textarea>
+
+                        <label for="blockId">BlockId:</label>
+                        <input id="blockId" name="blockId" type="text"/>
+
+                        <button class="btn waves-effect waves-light" type="submit" name="action">Submit
+                        </button>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
     </body>
 </html>
