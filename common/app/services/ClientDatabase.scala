@@ -7,7 +7,7 @@ import com.amazonaws.regions.{Region, Regions}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, QueryRequest}
 import config.Config
-import helper.BrowserEndpoint
+import helper.{GcmId, BrowserEndpoint}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
@@ -37,7 +37,13 @@ class ClientDatabase @Inject()(
 
       dynamoDBClient.queryFuture(finalQueryRequest).flatMap { queryResult =>
         val newResults = results ::: queryResult.getItems.asScala.flatMap { item =>
-          item.asScala.get("browserEndpoint").map(_.getS).flatMap(BrowserEndpoint.fromEndpointUrl)
+          val itemMap: scala.collection.mutable.Map[String, AttributeValue] = item.asScala
+
+            itemMap.get("browserEndpoint")
+              .map(_.getS)
+              .flatMap(BrowserEndpoint.fromEndpointUrl)
+            .orElse {
+              itemMap.get("gcmBrowserId").map(_.getS).map(GcmId)}
         }.toList
 
         Option(queryResult.getLastEvaluatedKey) match {
