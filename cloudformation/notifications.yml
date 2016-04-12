@@ -5,9 +5,6 @@ Parameters:
   GCMSubscriptionsTableName:
     Description: The table name of the GCM Subscriptions Table
     Type: String
-  FrontendNotificationMessageTableName:
-    Description: The table name of the notification messages table
-    Type: String
   GCMWorkerQueueName:
     Description: The name of the GCM work queue
     Type: String
@@ -67,18 +64,6 @@ Resources:
         - {AttributeName: topicId, KeyType: HASH}
       AttributeDefinitions:
         - {AttributeName: topicId, AttributeType: S}
-      ProvisionedThroughput:
-        ReadCapacityUnits: 10
-        WriteCapacityUnits: 10
-
-  FrontendNotificationMessages:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: {Ref: FrontendNotificationMessageTableName}
-      KeySchema:
-        - {AttributeName: gcmBrowserId, KeyType: HASH}
-      AttributeDefinitions:
-        - {AttributeName: gcmBrowserId, AttributeType: S}
       ProvisionedThroughput:
         ReadCapacityUnits: 10
         WriteCapacityUnits: 10
