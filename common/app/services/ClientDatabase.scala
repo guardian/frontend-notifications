@@ -37,7 +37,7 @@ class ClientDatabase @Inject()(
 
       dynamoDBClient.queryFuture(finalQueryRequest).flatMap { queryResult =>
         val newResults = results ::: queryResult.getItems.asScala.flatMap { item =>
-          item.asScala.get("gcmBrowserId").map(_.getS).flatMap(BrowserEndpoint.fromEndpointUrl)
+          item.asScala.get("browserEndpoint").map(_.getS).flatMap(BrowserEndpoint.fromEndpointUrl)
         }.toList
 
         Option(queryResult.getLastEvaluatedKey) match {
