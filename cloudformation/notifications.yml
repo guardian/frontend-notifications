@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Frontend Notifications Infrastructure'
 
 Parameters:
-  GCMSubscriptionsTableName:
+  BrowserSubscriptionsTableName:
     Description: The table name of the GCM Subscriptions Table
     Type: String
   GCMWorkerQueueName:
@@ -42,16 +42,16 @@ Resources:
     Properties:
       QueueName: {Ref: TopicMessageQueueName}
 
-  GCMSubscriptionsTable:
+  BrowserSubscriptionsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: {Ref: GCMSubscriptionsTableName}
+      TableName: {Ref: BrowserSubscriptionsTableName}
       KeySchema:
         - {AttributeName: notificationTopicId, KeyType: HASH}
-        - {AttributeName: gcmBrowserId, KeyType: RANGE}
+        - {AttributeName: browserEndpoint, KeyType: RANGE}
       AttributeDefinitions:
         - {AttributeName: notificationTopicId, AttributeType: S}
-        - {AttributeName: gcmBrowserId, AttributeType: S}
+        - {AttributeName: browserEndpoint, AttributeType: S}
       ProvisionedThroughput:
         ReadCapacityUnits: 10
         WriteCapacityUnits: 10
@@ -225,7 +225,7 @@ Resources:
             - dynamodb:*
           Effect: Allow
           Resource:
-            Fn::Join: [":", ["arn:aws:dynamodb", {Ref: AWS::Region}, {Ref: AWS::AccountId}, Fn::Join: ["", ["table/", {Ref: GCMSubscriptionsTableName}]]]]
+            Fn::Join: [":", ["arn:aws:dynamodb", {Ref: AWS::Region}, {Ref: AWS::AccountId}, Fn::Join: ["", ["table/", {Ref: BrowserSubscriptionsTableName}]]]]
         - Action:
             - dynamodb:*
           Effect: Allow
