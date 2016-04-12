@@ -7,7 +7,7 @@ import com.amazonaws.regions.{Regions, Region}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import config.Config
-import helper.DynamoLockingUpdateTable
+import helper.{FirefoxEndpoint, GcmId, ChromeEndpoint, DynamoLockingUpdateTable}
 import model.{KeyEvent, PublishedMessage, LiveBlogUpdateEvent, Update}
 import org.joda.time.DateTime
 import services._
@@ -72,15 +72,26 @@ class MessageWorker @Inject() (
   }
 
   private def sendKeyEvents(topic: String, keyEvents: List[KeyEvent]): Future[Unit] =
-    clientDatabase.getIdsByTopic(topic).map { listOfBrowserIds =>
-      log.info(s"There are ${listOfBrowserIds.size} browers to notify for $topic")
-      listOfBrowserIds.foreach { browserId =>
-        keyEvents.map { keyEvent =>
-          val topicMessage: String = keyEvent.title.getOrElse(s"Message for $topic")
-          log.info(s"Message for $topic with Id: ${keyEvent.id}")
-          val gcmMessage: GCMMessage = GCMMessage(browserId.get, topic, topicMessage, keyEvent.body, keyEvent.id)
-          redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
-            ServerStatistics.gcmMessagesSent.incrementAndGet()
-            gcmWorker.queue.send(List(gcmMessage))}}}}
+    clientDatabase.getIdsByTopic(topic).map { listOfBrowserEndpoints =>
+      log.info(s"There are ${listOfBrowserEndpoints.size} browers to notify for $topic")
+      listOfBrowserEndpoints.foreach {
+        case chromeEndpoint@ChromeEndpoint(endpointUrl) =>
+          ChromeEndpoint.toGcmId(chromeEndpoint).map { gcmId =>
+            keyEvents.map { keyEvent =>
+              val topicMessage: String = keyEvent.title.getOrElse(s"Message for $topic")
+              log.info(s"Message for $topic with Id: ${keyEvent.id}")
+              val gcmMessage: GCMMessage = GCMMessage(gcmId.get, topic, topicMessage, keyEvent.body, keyEvent.id)
+              redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
+                ServerStatistics.gcmMessagesSent.incrementAndGet()
+                gcmWorker.queue.send(List(gcmMessage))}}}
+        case FirefoxEndpoint(endpointUrl) => ()
+        case GcmId(gcmId) =>
+          keyEvents.map { keyEvent =>
+            val topicMessage: String = keyEvent.title.getOrElse(s"Message for $topic")
+            log.info(s"Message for $topic with Id: ${keyEvent.id}")
+            val gcmMessage: GCMMessage = GCMMessage(gcmId, topic, topicMessage, keyEvent.body, keyEvent.id)
+            redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
+              ServerStatistics.gcmMessagesSent.incrementAndGet()
+              gcmWorker.queue.send(List(gcmMessage))}}}}
 
 }

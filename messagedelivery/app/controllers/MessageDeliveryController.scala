@@ -37,13 +37,13 @@ class MessageDeliveryController @Inject()(redis: RedisMessageDatabase) extends C
 
   private def withCors(response: Result): Result = response.withHeaders(headerValues:_*)
 
-  def getMessageOptions(gcmBrowserId: String) = Action { implicit request =>
+  def getMessageOptions(browserId: String) = Action { implicit request =>
       NoContent.withHeaders(headerValues:_*)}
 
-  def getMessage(gcmBrowserId: String) = Action.async { implicit request =>
-    redis.getMessages(gcmBrowserId).map {
+  def getMessage(browserId: String) = Action.async { implicit request =>
+    redis.getMessages(browserId).map {
       case Nil =>
-        log.warn(s"Could not retrieve latest message for $gcmBrowserId")
+        log.warn(s"Could not retrieve latest message for $browserId")
         withCors(NotFound(JsObject(Seq("status" -> JsString("not found")))))
       case messages =>
         withCors(

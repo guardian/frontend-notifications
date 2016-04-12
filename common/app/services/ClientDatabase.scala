@@ -7,11 +7,10 @@ import com.amazonaws.regions.{Region, Regions}
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient
 import com.amazonaws.services.dynamodbv2.model.{AttributeValue, QueryRequest}
 import config.Config
+import helper.{GcmId, BrowserEndpoint}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.Future
-
-case class BrowserId(get: String)
 
 @Singleton
 class ClientDatabase @Inject()(
@@ -22,9 +21,9 @@ class ClientDatabase @Inject()(
   val dynamoDBClient: AmazonDynamoDBAsyncClient = new AmazonDynamoDBAsyncClient().withRegion(Region.getRegion(Regions.EU_WEST_1))
   val TableName: String = config.ClientDatabaseTableName
 
-  def getIdsByTopic(topic: String): Future[List[BrowserId]] = {
+  def getIdsByTopic(topic: String): Future[List[BrowserEndpoint]] = {
 
-    def getQueryRequest(maybeLastEvaluatedKey: Option[java.util.Map[String, AttributeValue]], results: List[BrowserId]): Future[List[BrowserId]] = {
+    def getQueryRequest(maybeLastEvaluatedKey: Option[java.util.Map[String, AttributeValue]], results: List[BrowserEndpoint]): Future[List[BrowserEndpoint]] = {
       val queryRequest: QueryRequest =
         new QueryRequest()
           .withTableName(TableName)
@@ -38,7 +37,13 @@ class ClientDatabase @Inject()(
 
       dynamoDBClient.queryFuture(finalQueryRequest).flatMap { queryResult =>
         val newResults = results ::: queryResult.getItems.asScala.flatMap { item =>
-          item.asScala.get("gcmBrowserId").map(_.getS).map(BrowserId)
+          val itemMap: scala.collection.mutable.Map[String, AttributeValue] = item.asScala
+
+            itemMap.get("browserEndpoint")
+              .map(_.getS)
+              .flatMap(BrowserEndpoint.fromEndpointUrl)
+            .orElse {
+              itemMap.get("gcmBrowserId").map(_.getS).map(GcmId)}
         }.toList
 
         Option(queryResult.getLastEvaluatedKey) match {
