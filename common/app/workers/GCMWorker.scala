@@ -6,6 +6,7 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import com.google.android.gcm.server.MulticastResult
 import config.Config
+import helper.GcmId
 import play.api.libs.json.Json
 import services._
 
@@ -33,9 +34,9 @@ class GCMWorker @Inject()(
   override def process(message: SQSMessage[List[GCMMessage]]): Future[Unit] = {
     val listOfMessages: List[GCMMessage] = message.get
 
-    val browserIds: List[BrowserId] = listOfMessages
+    val browserIds: List[GcmId] = listOfMessages
       .map(_.clientId)
-      .map(BrowserId)
+      .map(GcmId)
 
     log.info(s"Processing job for ${listOfMessages.size} clients")
     log.info(s"Processing job for $browserIds")
