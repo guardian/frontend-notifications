@@ -5,6 +5,7 @@ import javax.inject.{Inject, Singleton}
 import com.google.android.gcm.server.Message.Builder
 import com.google.android.gcm.server.{MulticastResult, Result, Message, Sender}
 import config.Config
+import helper.GcmId
 
 import scala.concurrent.Future
 import scala.collection.JavaConverters._
@@ -28,14 +29,14 @@ class GCM @Inject()(config: Config) {
   def sendSingle(gcmNotification: GCMNotification, browserId: String): Future[Result] =
     Future.apply(gcmClient.send(GCMNotification.toMessage(gcmNotification), browserId, config.gcmSendRetries))
 
-  def sendMulticast(gcmNotification: Option[GCMNotification], listOfBrowserIds: List[BrowserId]): Future[MulticastResult] = {
+  def sendMulticast(gcmNotification: Option[GCMNotification], listOfBrowserIds: List[GcmId]): Future[MulticastResult] = {
     val message: Message = gcmNotification match {
       case None => GCMNotification.toMessage(GCMNotification("", ""))
       case Some(n) => GCMNotification.toMessage(n)}
 
     Future.apply(gcmClient.send(message, listOfBrowserIds.map(_.get).asJava, config.gcmSendRetries))}
 
-  def sendMulticastWithoutPayload(listOfBrowserIds: List[BrowserId]): Future[MulticastResult] =
+  def sendMulticastWithoutPayload(listOfBrowserIds: List[GcmId]): Future[MulticastResult] =
     sendMulticast(None, listOfBrowserIds)
 
 }
