@@ -2,7 +2,7 @@ import com.twitter.scrooge.ScroogeSBT
 
 def env(key: String): Option[String] = Option(System.getenv(key))
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/"
 
@@ -34,7 +34,7 @@ lazy val capiEventWorker = (project in file("./capieventworker"))
   .dependsOn(common)
   .settings(
     name := "capi-event-worker",
-    scalaVersion := "2.11.7",
+    scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
       "com.amazonaws" % "aws-java-sdk" % "1.10.20",
