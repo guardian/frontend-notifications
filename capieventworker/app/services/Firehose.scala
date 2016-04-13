@@ -10,6 +10,7 @@ import com.amazonaws.services.kinesis.clientlibrary.lib.worker.{InitialPositionI
 import com.amazonaws.services.kinesis.clientlibrary.types.ShutdownReason
 import com.amazonaws.services.kinesis.metrics.impl.NullMetricsFactory
 import com.amazonaws.services.kinesis.model.Record
+import com.gu.crier.model.event.v1.EventPayload.{UnknownUnionField, Content}
 import config.Config
 import model.{KeyEvent, LiveBlogUpdateEvent}
 import workers.MessageWorker
@@ -71,12 +72,18 @@ class RecordProcessor(messageWorker: MessageWorker) extends IRecordProcessor wit
 
     records.asScala.foreach { message =>
       ThriftDeserializer.deserializeEvent(message.getData) match {
-        case Success(content) =>
-          val tags: List[String] = content._4.tags.map(_.id).toList
-          if (tags.exists(_ == "tone/minutebyminute")) {
-            ServerStatistics.capiEventsProcessed.incrementAndGet()
-            log.info(s"Putting ${content._4.id} onto queue!")
-            messageWorker.queue.send(LiveBlogUpdateEvent(content._4.id, KeyEvent.fromContent(content.content)))}
+        case Success(event) =>
+          event.payload match {
+            case Some(Content(content)) =>
+              val tags: List[String] = content.tags.map(_.id).toList
+              if (tags.exists(_ == "tone/minutebyminute")) {
+                ServerStatistics.capiEventsProcessed.incrementAndGet()
+                log.info(s"Putting ${content.id} onto queue!")
+                messageWorker.queue.send(LiveBlogUpdateEvent(content.id, KeyEvent.fromContent(content)))}
+            case Some(UnknownUnionField(unknown)) =>
+              log.warn(s"Got an unknown payload type from CAPI: $unknown")
+            case None =>
+              log.warn(s"Got an event with NO payload")}
         case Failure(t) =>
           log.error(s"Could not deserialize message: $t")
       }
