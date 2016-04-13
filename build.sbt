@@ -14,7 +14,7 @@ lazy val common = (project in file("./common"))
       "com.google.gcm" % "gcm-server" % "1.0.0",
       "com.github.etaty" %% "rediscala" % "1.6.0",
       "org.julienrf" % "play-json-derived-codecs_2.11" % "3.1",
-      "com.gu" %% "content-api-client" % "8.2",
+      "com.gu" %% "content-api-client" % "8.5",
       "org.scalatest" %% "scalatest" % "2.2.6" % "test"
     )
   )
@@ -49,7 +49,7 @@ lazy val capiEventWorker = (project in file("./capieventworker"))
       base => base / "src/main/resources"
     },
     libraryDependencies ++= Seq(
-      "com.gu" %% "content-api-client" % "8.2",
+      "com.gu" %% "content-api-client" % "8.5",
       "com.twitter" %% "scrooge-core" % "4.6.0"
     )
   )
