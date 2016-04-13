@@ -2,8 +2,6 @@ namespace scala com.gu.crier.model.event.v1
 
 include "content/v1.thrift"
 
-typedef string RemovedContent
-
 enum EventType {
     Update = 1,
     Delete = 2
