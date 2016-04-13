@@ -6,13 +6,6 @@ scalaVersion := "2.11.8"
 
 resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/"
 
-libraryDependencies ++= Seq(
-  "org.apache.thrift" % "libthrift" % "0.9.2",
-  "com.twitter" %% "finagle-thrift" % "6.33.0",
-  "com.gu" %% "content-api-client" % "7.24"
-)
-
-
 
 lazy val common = (project in file("./common"))
   .settings(
