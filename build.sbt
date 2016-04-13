@@ -1,5 +1,3 @@
-import com.twitter.scrooge.ScroogeSBT
-
 def env(key: String): Option[String] = Option(System.getenv(key))
 
 scalaVersion := "2.11.8"
