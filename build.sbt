@@ -9,7 +9,7 @@ resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/"
 
 lazy val common = (project in file("./common"))
   .settings(
-    scalaVersion := "2.11.7",
+    scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
       "com.amazonaws" % "aws-java-sdk" % "1.10.20",
@@ -44,7 +44,6 @@ lazy val capiEventWorker = (project in file("./capieventworker"))
   )
   .enablePlugins(PlayScala, RiffRaffArtifact, UniversalPlugin)
   .settings(
-    scalaVersion := "2.11.8",
     scroogeThriftDependencies in Compile := Seq("content-api-models", "story-packages-model-thrift", "content-atom-model-thrift"),
     resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases",
     resolvers += "Guardian GitHub Repository" at "http://guardian.github.io/maven/repo-releases",
@@ -61,7 +60,6 @@ lazy val messageWorker = (project in file("./messageworker"))
   .dependsOn(common)
   .settings(
     name := "message-worker",
-    scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
       "com.amazonaws" % "aws-java-sdk" % "1.10.20"
@@ -81,7 +79,6 @@ lazy val messageDelivery = (project in file("./messagedelivery"))
   .dependsOn(common)
   .settings(
     name := "message-delivery",
-    scalaVersion := "2.11.7",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
       "com.amazonaws" % "aws-java-sdk" % "1.10.20"
