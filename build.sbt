@@ -16,7 +16,7 @@ lazy val common = (project in file("./common"))
       "com.google.gcm" % "gcm-server" % "1.0.0",
       "com.github.etaty" %% "rediscala" % "1.6.0",
       "org.julienrf" % "play-json-derived-codecs_2.11" % "3.1",
-      "com.gu" %% "content-api-client" % "7.24",
+      "com.gu" %% "content-api-client" % "8.2",
       "org.scalatest" %% "scalatest" % "2.2.6" % "test"
     )
   )
@@ -43,18 +43,17 @@ lazy val capiEventWorker = (project in file("./capieventworker"))
     riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
   )
   .enablePlugins(PlayScala, RiffRaffArtifact, UniversalPlugin)
-  .settings(ScroogeSBT.newSettings: _*)
   .settings(
-    scalaVersion := "2.11.7",
-    scroogeThriftDependencies in Compile := Seq("content-api-client_2.11", "content-atom-model_2.11", "content-api-models_2.11", "story-packages-model_2.11"),
+    scalaVersion := "2.11.8",
+    scroogeThriftDependencies in Compile := Seq("content-api-models", "story-packages-model-thrift", "content-atom-model-thrift"),
     resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases",
     resolvers += "Guardian GitHub Repository" at "http://guardian.github.io/maven/repo-releases",
     scroogeThriftSourceFolder in Compile <<= baseDirectory {
       base => base / "src/main/resources"
     },
     libraryDependencies ++= Seq(
-      "com.gu" %% "content-api-client" % "7.24",
-      "com.twitter" %% "scrooge-core" % "3.20.0"
+      "com.gu" %% "content-api-client" % "8.2",
+      "com.twitter" %% "scrooge-core" % "4.6.0"
     )
   )
 
@@ -62,7 +61,7 @@ lazy val messageWorker = (project in file("./messageworker"))
   .dependsOn(common)
   .settings(
     name := "message-worker",
-    scalaVersion := "2.11.7",
+    scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
       "com.amazonaws" % "aws-java-sdk" % "1.10.20"
