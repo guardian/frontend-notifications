@@ -3,7 +3,7 @@ sudo: false
 jdk:
 - oraclejdk8
 script:
-- sbt clean test riffRaffUpload
+- sbt riffRaffBuildIdentifier clean test riffRaffUpload
 branches:
   only:
     - master
