@@ -1,13 +1,13 @@
 def env(key: String): Option[String] = Option(System.getenv(key))
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.11.7"
 
 resolvers += "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/"
 
 
 lazy val common = (project in file("./common"))
   .settings(
-    scalaVersion := "2.11.8",
+    scalaVersion := "2.11.7",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
       "com.amazonaws" % "aws-java-sdk" % "1.10.20",
@@ -25,7 +25,7 @@ lazy val capiEventWorker = (project in file("./capieventworker"))
   .dependsOn(common)
   .settings(
     name := "capi-event-worker",
-    scalaVersion := "2.11.8",
+    scalaVersion := "2.11.7",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
       "com.amazonaws" % "aws-java-sdk" % "1.10.20",
@@ -58,7 +58,7 @@ lazy val messageWorker = (project in file("./messageworker"))
   .dependsOn(common)
   .settings(
     name := "message-worker",
-    scalaVersion := "2.11.8",
+    scalaVersion := "2.11.7",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
       "com.amazonaws" % "aws-java-sdk" % "1.10.20"
@@ -78,7 +78,7 @@ lazy val messageDelivery = (project in file("./messagedelivery"))
   .dependsOn(common)
   .settings(
     name := "message-delivery",
-    scalaVersion := "2.11.8",
+    scalaVersion := "2.11.7",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.2",
       "com.amazonaws" % "aws-java-sdk" % "1.10.20"
