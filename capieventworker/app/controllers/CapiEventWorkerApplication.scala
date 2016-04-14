@@ -15,6 +15,8 @@ class CapiEventWorkerApplication @Inject() (capiEventWorker: CAPIKinesisStreamMo
 
   def info = Action {
     Ok(s"CAPI events Received: ${ServerStatistics.capiEventsReceived.get()}\n" +
-      s"CAPI Events Processed: ${ServerStatistics.capiEventsProcessed.get()}")
+      s"CAPI Events Processed: ${ServerStatistics.capiEventsProcessed.get()}\n" +
+      s"Last Event Received: ${ServerStatistics.lastCapiEventReceived.get}" +
+      s"Thrift Deserialisation Errors: ${ServerStatistics.thriftDeserialisationFailures}")
   }
 }
