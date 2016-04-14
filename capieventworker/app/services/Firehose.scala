@@ -73,6 +73,9 @@ class RecordProcessor(messageWorker: MessageWorker) extends IRecordProcessor wit
     records.asScala.foreach { message =>
       ThriftDeserializer.deserializeEvent(message.getData) match {
         case Success(event) =>
+          ServerStatistics.lastCapiEventReceived.refresh()
+          ServerStatistics.thriftDeserialisationFailures.set(0L)
+
           event.payload match {
             case Some(Content(content)) =>
               val tags: List[String] = content.tags.map(_.id).toList
@@ -85,6 +88,7 @@ class RecordProcessor(messageWorker: MessageWorker) extends IRecordProcessor wit
             case None =>
               log.warn(s"Got an event with NO payload")}
         case Failure(t) =>
+          ServerStatistics.thriftDeserialisationFailures.incrementAndGet()
           log.error(s"Could not deserialize message: $t")
       }
     }
