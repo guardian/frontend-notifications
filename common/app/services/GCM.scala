@@ -9,15 +9,19 @@ import helper.GcmId
 
 import scala.concurrent.Future
 import scala.collection.JavaConverters._
+import scala.concurrent.duration._
 
 case class GCMNotification(title: String, body: String)
 
 object GCMNotification {
+  private val defaultMessageTTL: Int = 5.minutes.toSeconds.toInt
 
-  def toMessage(gcmNotification: GCMNotification): Message =
-    new Builder()
-      .build()
+  def toMessageWithTTL(gcmNotification: GCMNotification, maybeTTL: Option[Int]): Message = {
+    val emptyBuilder: Builder = new Builder()
+    maybeTTL.fold(emptyBuilder)(ttl => emptyBuilder.timeToLive(ttl)).build()}
 
+  def toMessageWithDefaultTTL(gcmNotification: GCMNotification): Message =
+    toMessageWithTTL(gcmNotification, Option(defaultMessageTTL))
 }
 
 @Singleton
@@ -27,12 +31,12 @@ class GCM @Inject()(config: Config) {
   val gcmClient: Sender = new Sender(config.gcmKey)
 
   def sendSingle(gcmNotification: GCMNotification, browserId: String): Future[Result] =
-    Future.apply(gcmClient.send(GCMNotification.toMessage(gcmNotification), browserId, config.gcmSendRetries))
+    Future.apply(gcmClient.send(GCMNotification.toMessageWithDefaultTTL(gcmNotification), browserId, config.gcmSendRetries))
 
   def sendMulticast(gcmNotification: Option[GCMNotification], listOfBrowserIds: List[GcmId]): Future[MulticastResult] = {
     val message: Message = gcmNotification match {
-      case None => GCMNotification.toMessage(GCMNotification("", ""))
-      case Some(n) => GCMNotification.toMessage(n)}
+      case None => GCMNotification.toMessageWithDefaultTTL(GCMNotification("", ""))
+      case Some(n) => GCMNotification.toMessageWithDefaultTTL(n)}
 
     Future.apply(gcmClient.send(message, listOfBrowserIds.map(_.get).asJava, config.gcmSendRetries))}
 
