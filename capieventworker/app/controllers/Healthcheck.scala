@@ -13,8 +13,8 @@ class Healthcheck extends Controller {
 
   def healthcheck() = Action {
 
-    if (ServerStatistics.lastCapiEventReceived.get.exists(lastReceived => DateTime.now.minusHours(1).isBefore(lastReceived))) {
-      InternalServerError(s"Have not successfully received a CAPI event since ${ServerStatistics.lastCapiEventReceived}")
+    if (ServerStatistics.lastCapiEventReceived.get.exists(lastReceived => DateTime.now.minusHours(1).isAfter(lastReceived))) {
+      InternalServerError(s"Have not successfully received a CAPI event since ${ServerStatistics.lastCapiEventReceived.get}")
     } else if (ServerStatistics.thriftDeserialisationFailures.get >= ConsecutiveErrorThreshold) {
       InternalServerError("Too many consecutive thrift parsing errors")
     } else {
