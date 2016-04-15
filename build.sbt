@@ -38,7 +38,8 @@ lazy val capiEventWorker = (project in file("./capieventworker"))
     riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
     riffRaffUploadManifestBucket := Option("riffraff-builds"),
     riffRaffManifestProjectName := "dotcom:notifications:capieventworker",
-    riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
+    riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV"),
+    riffRaffManifestBranch := env("TRAVIS_BRANCH").getOrElse(git.gitCurrentBranch.value)
   )
   .enablePlugins(PlayScala, RiffRaffArtifact, UniversalPlugin)
   .settings(
@@ -70,7 +71,8 @@ lazy val messageWorker = (project in file("./messageworker"))
     riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
     riffRaffUploadManifestBucket := Option("riffraff-builds"),
     riffRaffManifestProjectName := "dotcom:notifications:messageworker",
-    riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
+    riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV"),
+    riffRaffManifestBranch := env("TRAVIS_BRANCH").getOrElse(git.gitCurrentBranch.value)
   )
   .enablePlugins(PlayScala, RiffRaffArtifact, UniversalPlugin)
 
@@ -90,6 +92,7 @@ lazy val messageDelivery = (project in file("./messagedelivery"))
     riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
     riffRaffUploadManifestBucket := Option("riffraff-builds"),
     riffRaffManifestProjectName := "dotcom:notifications:message-delivery",
-    riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV")
+    riffRaffBuildIdentifier := env("TRAVIS_BUILD_NUMBER").getOrElse("DEV"),
+    riffRaffManifestBranch := env("TRAVIS_BRANCH").getOrElse(git.gitCurrentBranch.value)
   )
   .enablePlugins(PlayScala, RiffRaffArtifact, UniversalPlugin)
