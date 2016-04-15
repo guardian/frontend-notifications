@@ -1,3 +1,5 @@
+import com.typesafe.sbt.SbtGit.git
+
 def env(key: String): Option[String] = Option(System.getenv(key))
 
 scalaVersion := "2.11.8"
