@@ -4,8 +4,7 @@ sealed trait BrowserEndpoint
 case class ChromeEndpoint(get: String) extends BrowserEndpoint
 case class FirefoxEndpoint(get: String) extends BrowserEndpoint
 
-//Temporary until we move completely to endpoints
-case class GcmId(get: String) extends BrowserEndpoint
+case class GcmId(get: String) extends AnyVal
 
 object BrowserEndpoint {
   private val ChromeEndpointPattern: String = "https://android.googleapis.com/gcm/send"
