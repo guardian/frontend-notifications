@@ -42,8 +42,6 @@ class ClientDatabase @Inject()(
             itemMap.get("browserEndpoint")
               .map(_.getS)
               .flatMap(BrowserEndpoint.fromEndpointUrl)
-            .orElse {
-              itemMap.get("gcmBrowserId").map(_.getS).map(GcmId)}
         }.toList
 
         Option(queryResult.getLastEvaluatedKey) match {
