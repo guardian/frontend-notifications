@@ -15,7 +15,6 @@ object BrowserEndpoint {
     endpointUrl match {
       case endpoint if endpoint.startsWith(ChromeEndpointPattern) => Option(ChromeEndpoint(endpoint))
       case endpoint if endpoint.startsWith(FirefoxEndpointPattern) => Option(FirefoxEndpoint(endpoint))
-      case endpointUrl: String if !endpointUrl.startsWith("http") => Option(GcmId(endpointUrl))
       case _ => None
     }
 }
