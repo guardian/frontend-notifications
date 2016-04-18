@@ -84,14 +84,6 @@ class MessageWorker @Inject() (
               redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
                 ServerStatistics.gcmMessagesSent.incrementAndGet()
                 gcmWorker.queue.send(List(gcmMessage))}}}
-        case FirefoxEndpoint(endpointUrl) => ()
-        case GcmId(gcmId) =>
-          keyEvents.map { keyEvent =>
-            val topicMessage: String = keyEvent.title.getOrElse(s"Message for $topic")
-            log.info(s"Message for $topic with Id: ${keyEvent.id}")
-            val gcmMessage: GCMMessage = GCMMessage(gcmId, topic, topicMessage, keyEvent.body, keyEvent.id)
-            redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
-              ServerStatistics.gcmMessagesSent.incrementAndGet()
-              gcmWorker.queue.send(List(gcmMessage))}}}}
+        case FirefoxEndpoint(endpointUrl) => ()}}
 
 }
