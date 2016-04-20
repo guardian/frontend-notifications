@@ -12,7 +12,7 @@ lazy val common = (project in file("./common"))
     scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.3",
-      "com.amazonaws" % "aws-java-sdk" % "1.10.71",
+      "com.amazonaws" % "aws-java-sdk" % "1.10.60",
       "com.google.gcm" % "gcm-server" % "1.0.0",
       "com.github.etaty" %% "rediscala" % "1.6.0",
       "org.julienrf" % "play-json-derived-codecs_2.11" % "3.1",
@@ -30,7 +30,7 @@ lazy val capiEventWorker = (project in file("./capieventworker"))
     scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.3",
-      "com.amazonaws" % "aws-java-sdk" % "1.10.71",
+      "com.amazonaws" % "aws-java-sdk" % "1.10.60",
       "com.amazonaws" % "amazon-kinesis-client" % "1.6.2"
     ),
     routesGenerator := InjectedRoutesGenerator,
@@ -64,7 +64,7 @@ lazy val messageWorker = (project in file("./messageworker"))
     scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.3",
-      "com.amazonaws" % "aws-java-sdk" % "1.10.71"
+      "com.amazonaws" % "aws-java-sdk" % "1.10.60"
     ),
     routesGenerator := InjectedRoutesGenerator,
     packageName in Universal := normalizedName.value,
@@ -85,7 +85,7 @@ lazy val messageDelivery = (project in file("./messagedelivery"))
     scalaVersion := "2.11.8",
     libraryDependencies ++= Seq(
       "joda-time" % "joda-time" % "2.9.3",
-      "com.amazonaws" % "aws-java-sdk" % "1.10.71"
+      "com.amazonaws" % "aws-java-sdk" % "1.10.60"
     ),
     routesGenerator := InjectedRoutesGenerator,
     packageName in Universal := normalizedName.value,
