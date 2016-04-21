@@ -21,7 +21,7 @@ class MessageWorkerApplication @Inject() (
   import scala.concurrent.ExecutionContext.Implicits.global
 
   def index = Action { 
-    Ok("Index OK from Application")
+    Ok("Index OK from Message Worker")
   }
 
   def info = Action {
