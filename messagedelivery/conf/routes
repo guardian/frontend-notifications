@@ -6,4 +6,4 @@ POST /messages/create controllers.MessageDeliveryController.saveRedisMessage()
 
 GET /_healthcheck controllers.Healthcheck.healthcheck()
 
-GET /.well-known/acme-challenge/fymWxrZRYXDKiDQouwLGgICaisvEXPYyQL2qBR2-tbE controllers.MessageDeliveryController.acmeChallenge()
+GET /.well-known/acme-challenge/msZ90R9Y1s2QDbOlSsVnPO14XCCmRi3HqfMkkxlMrEE controllers.MessageDeliveryController.acmeChallenge()
