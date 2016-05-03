@@ -19,7 +19,7 @@ import scala.util.{Failure, Success}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-case class RedisMessage(topic: String, title: String, body: String, blockId: String, time: Long)
+case class RedisMessage(topic: String, title: String, body: String, blockId: Option[String], time: Long)
 
 object RedisMessage {
   implicit val redisMessageFormat = Json.format[RedisMessage]
