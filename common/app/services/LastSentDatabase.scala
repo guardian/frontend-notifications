@@ -20,7 +20,7 @@ sealed trait LastSent
 case class LastSentDateOnly(topic: String, dateTime: DateTime) extends LastSent
 
 object LastSentDateOnly {
-  def emptyForTopic(topic: String): LastSent = LastSentDateOnly(topic, DateTime.now())
+  def emptyForTopic(topic: String): LastSentDateOnly = LastSentDateOnly(topic, DateTime.now())
 }
 
 case class LastSentKeyEvent(topic: String, dateTime: DateTime, keyEventId: Option[String]) extends LastSent
