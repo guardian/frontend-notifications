@@ -1,19 +1,10 @@
 package services
 
-import javax.inject.Inject
-
-import com.amazonaws.regions.{Regions, Region}
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import com.google.inject.Singleton
-import config.Config
 import helper.DynamoFormat.DynamoFormat
-import helper.DynamoLockingUpdateTable
 import org.joda.time.DateTime
 
 import scala.collection.JavaConverters._
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 
 sealed trait LastSent
 
