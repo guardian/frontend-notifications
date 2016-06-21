@@ -3,6 +3,7 @@ package model
 import com.gu.contentapi.client.model.v1.Content
 import julienrf.json.derived
 import play.api.libs.json.{Json, Format}
+import services.Sentences
 
 import scala.util.Try
 
@@ -11,13 +12,15 @@ case class KeyEvent(id: String, title: Option[String], body: String)
 object KeyEvent {
   implicit val implicitFormat: Format[KeyEvent] = Json.format[KeyEvent]
 
+  val keyEventBodySize: Int = 412
+
   def fromContent(content: Content): List[KeyEvent] =
     content.blocks
       .flatMap(_._2)
       .getOrElse(Nil)
       .filter(_.attributes.keyEvent.exists(identity))
       .filter(_.published)
-      .map(block => KeyEvent(block.id, block.title, block.bodyTextSummary))
+      .map(block => KeyEvent(block.id, block.title, Sentences.reduceToWithEllipsis(block.bodyTextSummary, keyEventBodySize)))
       .toList
       .reverse
 
