@@ -8,7 +8,7 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient
 import config.Config
 import helper.{FirefoxEndpoint, GcmId, ChromeEndpoint, DynamoLockingUpdateTable}
-import model.{KeyEvent, PublishedMessage, LiveBlogUpdateEvent, Update}
+import model._
 import org.joda.time.DateTime
 import services._
 
@@ -68,7 +68,32 @@ class MessageWorker @Inject() (
             log.info(s"Never seen $t before; sending all ${keyEvents.length} key events")
             sendKeyEvents(t, keyEvents)
           case t =>
-            log.warn(s"Did not sent any events for $topic: DB Result: $t")}}
+            log.warn(s"Did not sent any events for $topic: DB Result: $t")}
+
+      case SeriesUpdate(seriesTagId, seriesWebTitle, contentId, contentWebTitle) =>
+        log.info(s"Processing job for SeriesUpdate($seriesTagId)")
+
+        lazy val emptyLastSentDateOnly: LastSentDateOnly = LastSentDateOnly.emptyForTopic(seriesTagId)
+
+        lockingUpdate.lockingReadAndWriteWithCondition(id=seriesTagId, empty=emptyLastSentDateOnly){
+          case LastSentDateOnly(t, dateTime) =>
+            log.info(s"Last sent to $t at $dateTime")
+            Option(LastSentDateOnly.emptyForTopic(t))
+          case t =>
+            log.warn(s"Got the wrong type for $seriesTagId: $t")
+            None}
+          .map {
+            case lockingUpdate.ReadAndWrite(LastSentDateOnly(t, _), newItem) =>
+              log.info(s"Sending out notification for $seriesTagId")
+              sendSeriesUpdate(t, seriesWebTitle, contentId, contentWebTitle)
+            case lockingUpdate.NewItem(LastSentDateOnly(t, _)) =>
+              log.info(s"Never seen $seriesTagId before; sending notification")
+              sendSeriesUpdate(t, seriesWebTitle, contentId, contentWebTitle)
+            case t =>
+              log.warn(s"Did not sent any events for $seriesTagId: DB Result: $t")}
+
+
+    }
   }
 
   private def sendKeyEvents(topic: String, keyEvents: List[KeyEvent]): Future[Unit] =
@@ -80,10 +105,23 @@ class MessageWorker @Inject() (
             keyEvents.map { keyEvent =>
               val topicMessage: String = keyEvent.title.getOrElse(s"Message for $topic")
               log.info(s"Message for $topic with Id: ${keyEvent.id}")
-              val gcmMessage: GCMMessage = GCMMessage(gcmId.get, topic, topicMessage, keyEvent.body, keyEvent.id)
+              val gcmMessage: GCMMessage = GCMMessage(gcmId.get, topic, topicMessage, keyEvent.body, Option(keyEvent.id))
               redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
                 ServerStatistics.gcmMessagesSent.incrementAndGet()
                 gcmWorker.queue.send(List(gcmMessage))}}}
+        case FirefoxEndpoint(endpointUrl) => ()}}
+
+  private def sendSeriesUpdate(seriesTagId: String, seriesWebTitle: String, contentId: String, contentWebTitle: String): Future[Unit] =
+    clientDatabase.getIdsByTopic(seriesTagId).map { listOfBrowserEndpoints =>
+      log.info(s"There are ${listOfBrowserEndpoints.size} browers to notify for $seriesTagId")
+      listOfBrowserEndpoints.foreach {
+        case chromeEndpoint@ChromeEndpoint(endpointUrl) =>
+          ChromeEndpoint.toGcmId(chromeEndpoint).map { gcmId =>
+            val topicMessage: String = s"Series Update: $seriesWebTitle"
+            val gcmMessage: GCMMessage = GCMMessage(gcmId.get, contentId, topicMessage, contentWebTitle, None)
+            redisMessageDatabase.leaveMessageWithDefaultExpiry(gcmMessage).map { _ =>
+              ServerStatistics.gcmMessagesSent.incrementAndGet()
+              gcmWorker.queue.send(List(gcmMessage))}}
         case FirefoxEndpoint(endpointUrl) => ()}}
 
 }

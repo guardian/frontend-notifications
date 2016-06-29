@@ -1,26 +1,17 @@
 package services
 
-import javax.inject.Inject
-
-import com.amazonaws.regions.{Regions, Region}
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBAsyncClient
 import com.amazonaws.services.dynamodbv2.model.AttributeValue
-import com.google.inject.Singleton
-import config.Config
 import helper.DynamoFormat.DynamoFormat
-import helper.DynamoLockingUpdateTable
 import org.joda.time.DateTime
 
 import scala.collection.JavaConverters._
-import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 
 sealed trait LastSent
 
 case class LastSentDateOnly(topic: String, dateTime: DateTime) extends LastSent
 
 object LastSentDateOnly {
-  def emptyForTopic(topic: String): LastSent = LastSentDateOnly(topic, DateTime.now())
+  def emptyForTopic(topic: String): LastSentDateOnly = LastSentDateOnly(topic, DateTime.now())
 }
 
 case class LastSentKeyEvent(topic: String, dateTime: DateTime, keyEventId: Option[String]) extends LastSent

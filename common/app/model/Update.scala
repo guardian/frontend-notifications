@@ -31,6 +31,7 @@ object KeyEvent {
 sealed trait Update
 case class PublishedMessage(topic: String) extends Update
 case class LiveBlogUpdateEvent(topic: String, keyEvents: List[KeyEvent]) extends Update
+case class SeriesUpdate(seriesTagId: String, seriesTitle: String, contentId: String, contentWebTitle: String) extends Update
 
 object Update {
   implicit val implicitFormat: Format[Update] = derived.oformat

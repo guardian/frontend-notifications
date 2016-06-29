@@ -19,7 +19,10 @@ import scala.collection.JavaConverters._
 import scala.util.{Failure, Success}
 
 @Singleton
-class Firehose @Inject() (config: Config, messageWorker: MessageWorker) {
+class Firehose @Inject() (
+  config: Config,
+  messageWorker: MessageWorker,
+  seriesDatabase: SeriesDatabase) {
 
   val localCredentials: AWSCredentialsProvider = new DefaultAWSCredentialsProviderChain()
 
@@ -41,17 +44,17 @@ class Firehose @Inject() (config: Config, messageWorker: MessageWorker) {
     .withInitialPositionInStream(InitialPositionInStream.LATEST)
 
   val worker = new Worker(
-    new RecordProcessorFactory(messageWorker),
+    new RecordProcessorFactory(messageWorker, seriesDatabase),
     kinesisClientLibConfiguration,
     new NullMetricsFactory()
   )
 }
 
-class RecordProcessorFactory(messageWorker: MessageWorker) extends IRecordProcessorFactory {
-  override def createProcessor: IRecordProcessor = new RecordProcessor(messageWorker)
+class RecordProcessorFactory(messageWorker: MessageWorker, seriesDatabase: SeriesDatabase) extends IRecordProcessorFactory {
+  override def createProcessor: IRecordProcessor = new RecordProcessor(messageWorker, seriesDatabase)
 }
 
-class RecordProcessor(messageWorker: MessageWorker) extends IRecordProcessor with Logging {
+class RecordProcessor(messageWorker: MessageWorker, seriesDatabase: SeriesDatabase) extends IRecordProcessor with Logging {
 
   private val kinesisShardId: AtomicReference[String] = new AtomicReference("")
   private val nextCheckpointTimeInMillis: AtomicLong = new AtomicLong(0L)
@@ -78,6 +81,15 @@ class RecordProcessor(messageWorker: MessageWorker) extends IRecordProcessor wit
 
           event.payload match {
             case Some(Content(content)) =>
+              seriesDatabase.maybeSeriesUpdateFor(content) match {
+                case Some(seriesUpdate) =>
+                  ServerStatistics.capiEventsProcessed.incrementAndGet()
+                  log.info(s"Putting SERIES ${seriesUpdate.seriesTagId} (${content.id}) onto queue!")
+                  messageWorker.queue.send(seriesUpdate)
+                case None =>
+              }
+
+
               val tags: List[String] = content.tags.map(_.id).toList
               if (tags.exists(_ == "tone/minutebyminute")) {
                 ServerStatistics.capiEventsProcessed.incrementAndGet()
